@@ -17,7 +17,11 @@ You should have received a copy of the GNU General Public License
 along with broom.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "entry.hpp"
+# ifndef BROOM_HPP
+# define BROOM_HPP
+
+#include <cstdint>
+#include <iostream>
 
 // A class to find and manage duplicate files
 class Broom {
@@ -32,38 +36,19 @@ public:
     ~Broom() {};
 
     // Print current statistics
-    void print_statistics() {
-        std::cout
-        << "| sweeped " << m_sweeped_files << " files" << std::endl
-        << "| with a total size of " << m_sweeped_size << " bytes" << std::endl
-        << std::endl;
-    };
+    void print_statistics();
 
     // Determines whether entry1 is a duplicate of entry2
-    bool is_duplicate(Entry entry1, Entry entry2) {
-        if (entry1.path == entry2.path) {
-            // well, it`s the same file we`re talking about
-            return false;
-        }
-        else if (entry1.compare_checksums(entry2.checksum)) {
-            return true;
-        }
-
-        return false;
-    };
+    bool is_duplicate(Entry entry1, Entry entry2);
 
     // find all duplicates in the directory
-    int find_duplicates(std::filesystem::path directory, Entry entries[], bool recursive = false) {
-        return 0;
-    };
+    int find_duplicates(std::filesystem::path directory, Entry entries[], bool recursive = false);
 
     // remove ALL duplicate files
-    int sweep_all(Entry entries[]) {
-        return 0;
-    };
+    int sweep_all(Entry entries[]);
 
     // remove ALL duplicates but the one with specified index
-    int sweep_all_but(Entry entries[], uint32_t index = 0) {
-        return 0;
-    };
+    int sweep_all_but(Entry entries[], uint32_t index = 0);
 };
+
+# endif
