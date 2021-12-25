@@ -17,8 +17,8 @@ You should have received a copy of the GNU General Public License
 along with broom.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-# ifndef ENTRY_HPP
-# define ENTRY_HPP
+#ifndef ENTRY_HPP
+#define ENTRY_HPP
 
 #include <filesystem>
 #include <fstream>
@@ -30,21 +30,22 @@ const uint8_t CHECKSUM_SIZE = CHUNK_SIZE * 3;
 // A wrapper for every file with all necessary information
 class Entry {
 public:
-    Entry(std::filesystem::path path);
-    ~Entry();
-
     std::string filename;
     std::filesystem::path path;
     uintmax_t filesize;
     char checksum[CHECKSUM_SIZE];
 
+
+    Entry(std::filesystem::path path);
+    ~Entry();
+
     // Compare this entry`s checksum with the other one.
     // If the checksums are the same -> returns true, else -> false
     bool compare_checksums(char other_checksum[CHECKSUM_SIZE]);
 
-    // Remove entity from the disk
+    // Remove entry from the disk
     void remove();
 };
 
 
-# endif
+#endif

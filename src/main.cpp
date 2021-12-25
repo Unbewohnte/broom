@@ -98,8 +98,9 @@ int main(int argc, char* argv[]) {
     // printing all directories just for testing
     for (uint32_t i = 0; i < options.paths.size(); i++) {
         for (auto& p : std::filesystem::recursive_directory_iterator(options.paths.at(i))) {
-            if (p.is_directory()) {
-                std::cout << p.path() << std::endl;
+            if (!p.is_directory()) {
+                Entry entry(p);
+                std::cout << p.path() << "Checksum: " << entry.checksum << std::endl;
             }
         };
     };

@@ -17,11 +17,10 @@ You should have received a copy of the GNU General Public License
 along with broom.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-# ifndef BROOM_HPP
-# define BROOM_HPP
+#ifndef BROOM_HPP
+#define BROOM_HPP
 
 #include <cstdint>
-#include <iostream>
 
 // A class to find and manage duplicate files
 class Broom {
@@ -32,8 +31,8 @@ protected:
     uintmax_t m_sweeped_size;
 
 public:
-    Broom() {};
-    ~Broom() {};
+    Broom();
+    ~Broom();
 
     // Print current statistics
     void print_statistics();
@@ -42,13 +41,13 @@ public:
     bool is_duplicate(Entry entry1, Entry entry2);
 
     // find all duplicates in the directory
-    int find_duplicates(std::filesystem::path directory, Entry entries[], bool recursive = false);
+    int find_duplicates(std::filesystem::path directory, Entry entries[], bool recursive);
 
     // remove ALL duplicate files
     int sweep_all(Entry entries[]);
 
     // remove ALL duplicates but the one with specified index
-    int sweep_all_but(Entry entries[], uint32_t index = 0);
+    int sweep_all_but(Entry entries[], uint32_t index);
 };
 
-# endif
+#endif
