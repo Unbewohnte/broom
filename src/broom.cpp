@@ -18,6 +18,9 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include <iostream>
+#include <algorithm>
+#include <map>
+
 #include "entry.hpp"
 #include "broom.hpp"
 
@@ -32,21 +35,75 @@ void Broom::print_statistics() {
     << std::endl;
 };
 
-// Determines whether entry1 is a duplicate of entry2
-bool Broom::is_duplicate(Entry entry1, Entry entry2) {
-    if (entry1.path == entry2.path) {
-        // well, it`s the same file we`re talking about
-        return false;
-    }
-    else if (entry1.compare_checksums(entry2.checksum)) {
-        return true;
-    }
+// removes entries with unique file sizes. Returns amount of files
+// that are no longer being tracked
+uintmax_t Broom::untrack_unique_sizes() {
+    // key: size, value: amount of occurences
+    std::map<uintmax_t, uintmax_t> sizes;
+    std::map<uintmax_t, uintmax_t>::iterator iterator;
 
-    return false;
+    for (Entry& entry : m_tracked_entries) {
+        // check if size of this entry is already in the map
+        // if yes --> increment occurences counter
+        // if not --> add it to the map with a counter of 1
+        iterator = sizes.find(entry.filesize);
+        if (iterator == sizes.end()) {
+            // there is no such size
+            sizes.insert(std::pair<uintmax_t, uintmax_t>(entry.filesize, 1));
+        } else {
+            // there is such size
+            uintmax_t occurences = sizes[iterator->first];
+            sizes[iterator->first] = occurences++;
+        };
+    };
+
+    // go through the map again, look for uniques and remove entries with
+    // such filesizes
+    uintmax_t untracked = 0;
+    for (std::pair<uintmax_t, uintmax_t> size_entry : sizes) {
+        if (size_entry.second > 1) {
+            // not a unique size. Keep such entries
+        } else {
+            // a unique one. Untrack such an entry
+            std::remove_if(m_tracked_entries.begin(), m_tracked_entries.end(), [size_entry](Entry e) -> bool {
+                return (e.filesize == size_entry.first);
+            });
+            untracked++;
+
+        };
+    };
+
+    return untracked;
 };
 
-// find all duplicates in the directory
-int Broom::find_duplicates(std::filesystem::path directory, Entry entries[], bool recursive = false) {
+// get all entities from path recursively and track them
+int Broom::track(std::filesystem::path dir) {
+    std::filesystem::directory_options options =  (
+        std::filesystem::directory_options::follow_directory_symlink |
+        std::filesystem::directory_options::skip_permission_denied
+    );
+
+    for (std::filesystem::directory_entry dir_entry : std::filesystem::recursive_directory_iterator(dir, options)) {
+        if (dir_entry.is_directory()) {
+            continue;
+        };
+
+        Entry entry(dir_entry.path());
+        m_tracked_entries.push_back(entry);
+    };
+
+    return 0;
+};
+
+// find all duplicates among tracked entries
+int Broom::find_duplicates() {
+    size_t startsize = m_tracked_entries.size();
+    std::cout << "Tracking " << startsize << std::endl;
+
+    uintmax_t untracked = untrack_unique_sizes();
+    std::cout << "Untracked " << untracked << " unique sizes" << std::endl;
+
+    std::cout << "Duplicates: " << startsize - untracked << std::endl;
     return 0;
 };
 

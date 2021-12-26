@@ -21,14 +21,17 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #define BROOM_HPP
 
 #include <cstdint>
+#include <vector>
 
 // A class to find and manage duplicate files
 class Broom {
 protected:
-    // how many files has been "sweeped"
+    // how many files has been (would be ?) "sweeped"
     uintmax_t m_sweeped_files;
-    // how many bytes was freed
+    // how many bytes was (would be ?) freed
     uintmax_t m_sweeped_size;
+    // entries that possibly contain duplicates
+    std::vector<Entry> m_tracked_entries;
 
 public:
     Broom();
@@ -37,11 +40,15 @@ public:
     // Print current statistics
     void print_statistics();
 
-    // Determines whether entry1 is a duplicate of entry2
-    bool is_duplicate(Entry entry1, Entry entry2);
+    // get all entities from path recursively and track them
+    int track(std::filesystem::path path);
 
     // find all duplicates in the directory
-    int find_duplicates(std::filesystem::path directory, Entry entries[], bool recursive);
+    int find_duplicates();
+
+    // removes entries with unique file sizes. Returns amount of files
+    // that are no longer being tracked
+    uintmax_t untrack_unique_sizes();
 
     // remove ALL duplicate files
     int sweep_all(Entry entries[]);
