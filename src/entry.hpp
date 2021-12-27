@@ -23,9 +23,9 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include <filesystem>
 #include <fstream>
 
-// 3 chunks (beginning, end, middle of the file)
+// 3 chunks (beginning and end of the file)
 const uint8_t CHUNK_SIZE = 24;
-const uint8_t CHECKSUM_SIZE = CHUNK_SIZE * 3;
+const uint8_t CHECKSUM_SIZE = CHUNK_SIZE * 2;
 
 // A wrapper for every file with all necessary information
 class Entry {
@@ -41,7 +41,7 @@ public:
 
     // Compare this entry`s checksum with the other one.
     // If the checksums are the same -> returns true, else -> false
-    bool compare_checksums(char other_checksum[CHECKSUM_SIZE]);
+    bool compare_checksums(const char other_checksum[CHECKSUM_SIZE]);
 
     // Remove entry from the disk
     void remove();

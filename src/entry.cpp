@@ -51,20 +51,13 @@ Entry::Entry(std::filesystem::path path) {
         char end_buf[CHUNK_SIZE];
         entry_file.read(end_buf, CHUNK_SIZE);
 
-        entry_file.seekg(CHUNK_SIZE, std::ios::beg);
-        char middle_buf[CHUNK_SIZE];
-        entry_file.read(middle_buf, CHUNK_SIZE);
-
         for (uint8_t i = 0; i < CHECKSUM_SIZE; i++) {
             if (i < CHUNK_SIZE) {
                 checksum[i] = start_buf[i];
             }
-            else if (i > CHUNK_SIZE*2) {
-                checksum[i] = middle_buf[i-(CHUNK_SIZE*2)];
-            }
             else if (i > CHUNK_SIZE) {
                 checksum[i] = end_buf[i - CHUNK_SIZE];
-            }
+            };
         };
     };
 
@@ -75,7 +68,7 @@ Entry::~Entry() {};
 
 // Compare this entry`s checksum with the other one.
 // If the checksums are the same -> returns true, else -> false
-bool Entry::compare_checksums(char other_checksum[CHECKSUM_SIZE]) {
+bool Entry::compare_checksums(const char other_checksum[CHECKSUM_SIZE]) {
     for (uint8_t i = 0; i < CHECKSUM_SIZE; i++) {
         if (checksum[i] != other_checksum[i]) {
             return false;

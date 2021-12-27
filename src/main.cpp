@@ -27,12 +27,6 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 // Broom version number
 #define VERSION "v0.1.0"
 
-// Broom`s settings
-struct Options {
-    bool sweeping;
-    std::vector<std::filesystem::path> paths;
-};
-
 void print_help() {
     std::cout
     << "broom [FLAGS..] [COMMAND] [FILES|DIRECTORIES...]" << std::endl << std::endl
@@ -58,6 +52,7 @@ void print_version() {
 
 int main(int argc, char* argv[]) {
     Options options;
+    std::filesystem::path tracked_path;
 
     if (argc < 2) {
         print_help();
@@ -65,7 +60,7 @@ int main(int argc, char* argv[]) {
     };
 
     // process command line arguments
-    for (unsigned int i = 0; i < argc; i++) {
+    for (unsigned int i = 1; i < argc; i++) {
         // flags -> command -> directories&&files
 
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
@@ -76,6 +71,9 @@ int main(int argc, char* argv[]) {
             print_version();
             return 0;
         }
+        else if (strcmp(argv[i], "-b") == 0 || strcmp(argv[i], "--benchmark") == 0) {
+            options.benchmarking = true;
+        }
         else if (strcmp(argv[i], "sweep") == 0) {
             options.sweeping = true;
         }
@@ -84,18 +82,22 @@ int main(int argc, char* argv[]) {
         }
         else {
             // add path
-            if (i == 0) {
-                continue;
-            } else {
-                options.paths.push_back(argv[i]);
-            }
+            if (std::filesystem::exists(argv[i])) {
+                tracked_path = argv[i];
+            };
         };
     };
 
-    Broom broom;
+    // no path was specified
+    if (tracked_path.string() == "") {
+        print_help();
+        return 1;
+    };
 
-    std::filesystem::path first_path = options.paths.at(0);
-    broom.track(first_path);
+
+    Broom broom(options);
+
+    broom.track(tracked_path);
     broom.find_duplicates();
 
     return 0;

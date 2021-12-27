@@ -23,9 +23,20 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include <cstdint>
 #include <vector>
 
+// Broom`s settings
+struct Options {
+    bool sweeping;
+    bool benchmarking;
+};
+
+
 // A class to find and manage duplicate files
 class Broom {
 protected:
+    // enable/disable benchmarking output
+    bool m_benchmarking;
+    bool m_sweeping;
+
     // how many files has been (would be ?) "sweeped"
     uintmax_t m_sweeped_files;
     // how many bytes was (would be ?) freed
@@ -34,7 +45,7 @@ protected:
     std::vector<Entry> m_tracked_entries;
 
 public:
-    Broom();
+    Broom(Options options);
     ~Broom();
 
     // Print current statistics
@@ -50,11 +61,12 @@ public:
     // that are no longer being tracked
     uintmax_t untrack_unique_sizes();
 
-    // remove ALL duplicate files
-    int sweep_all(Entry entries[]);
+    // removes entries with unique first and last 20 bytes. Returns amount of
+    // files that are no longer being tracked
+    uintmax_t untrack_unique_contents();
 
-    // remove ALL duplicates but the one with specified index
-    int sweep_all_but(Entry entries[], uint32_t index);
+    // remove ALL duplicate files
+    int sweep_all();
 };
 
 #endif
