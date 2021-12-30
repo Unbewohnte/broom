@@ -20,14 +20,14 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include "entry.hpp"
 
 // A wrapper for every file with all necessary information
-Entry::Entry(std::filesystem::path path) {
+Entry::Entry(const std::filesystem::path entry_path) {
     // check for existense and being a directory
-    if (!std::filesystem::exists(path) || std::filesystem::is_directory(path)) {
+    if (!std::filesystem::exists(entry_path) || std::filesystem::is_directory(entry_path)) {
         throw "Does not exist or a directory";
     };
 
-    // filename
-    filename = path.filename();
+    // path
+    path = entry_path;
 
     // filesize
     filesize = std::filesystem::file_size(path);

@@ -30,13 +30,12 @@ const uint8_t CHECKSUM_SIZE = CHUNK_SIZE * 2;
 // A wrapper for every file with all necessary information
 class Entry {
 public:
-    std::string filename;
     std::filesystem::path path;
     uintmax_t filesize;
     char checksum[CHECKSUM_SIZE];
 
 
-    Entry(std::filesystem::path path);
+    Entry(const std::filesystem::path entry_path);
     ~Entry();
 
     // Compare this entry`s checksum with the other one.

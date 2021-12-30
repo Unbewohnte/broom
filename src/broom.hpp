@@ -52,10 +52,10 @@ public:
     void print_statistics();
 
     // get all entities from path recursively and track them
-    int track(std::filesystem::path path);
+    void track(const std::filesystem::path path);
 
     // find all duplicates in the directory
-    int find_duplicates();
+    void find_duplicates();
 
     // removes entries with unique file sizes. Returns amount of files
     // that are no longer being tracked
@@ -66,7 +66,7 @@ public:
     uintmax_t untrack_unique_contents();
 
     // remove ALL duplicate files
-    int sweep_all();
+    void sweep_all();
 };
 
 #endif

@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
         };
     };
 
-    // no path was specified
+    // no path was specified at all or every path was nonexistent
     if (tracked_path.string() == "") {
         print_help();
         return 1;
