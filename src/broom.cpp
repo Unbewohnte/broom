@@ -54,8 +54,7 @@ void Broom::track(const std::filesystem::path dir) {
             continue;
         };
 
-        Entry entry(dir_entry.path());
-        m_tracked_entries.push_back(entry);
+        m_tracked_filepaths.push_back(dir_entry);
     };
 
     if (m_benchmarking) {
@@ -74,14 +73,15 @@ uintmax_t Broom::untrack_unique_sizes() {
     // key: size, value: amount of occurences
     std::map<uintmax_t, uintmax_t> sizes_map;
 
-    for (Entry entry : m_tracked_entries) {
+    for (std::filesystem::path filepath : m_tracked_filepaths) {
         // check if size of this entry is already in the map
         // if yes --> increment occurences counter
         // if not --> add it to the map with a counter of 1
-        auto iterator = sizes_map.find(entry.filesize);
+        uintmax_t filesize = std::filesystem::file_size(filepath);
+        auto iterator = sizes_map.find(filesize);
         if (iterator == sizes_map.end()) {
             // there is no such size
-            sizes_map.insert({entry.filesize, 1});
+            sizes_map.insert({filesize, 1});
         } else {
             // there is such size
             sizes_map[iterator->first]++;
@@ -89,8 +89,9 @@ uintmax_t Broom::untrack_unique_sizes() {
     };
 
     uintmax_t untracked = 0;
-    std::remove_if(m_tracked_entries.begin(), m_tracked_entries.end(), [&untracked, sizes_map](Entry entry) -> bool{
-        auto iter = sizes_map.find(entry.filesize);
+    m_tracked_filepaths.erase(std::remove_if(m_tracked_filepaths.begin(), m_tracked_filepaths.end(), [&untracked, sizes_map](std::filesystem::path filepath) -> bool{
+        uintmax_t filesize = std::filesystem::file_size(filepath);
+        auto iter = sizes_map.find(filesize);
         if (iter->second == 1) {
             // unique
             untracked++;
@@ -100,7 +101,8 @@ uintmax_t Broom::untrack_unique_sizes() {
         // std::cout << "duplicate fsize: " << iter->first << " occurences: " << iter->second << std::endl;
 
         return false;
-    });
+    }));
+
 
     return untracked;
 };
@@ -112,7 +114,7 @@ uintmax_t Broom::untrack_unique_sizes() {
 //     std::map<char[CHECKSUM_SIZE], uintmax_t> contents_map;
 //     std::map<char[CHECKSUM_SIZE], uintmax_t>::iterator iterator;
 //
-//     for (Entry& entry : m_tracked_entries) {
+//     for (Entry& entry : m_tracked_filepaths) {
 //         // the same logic:
 //         // check if contents of this entry is already in the map
 //         // if yes --> increment occurences counter
@@ -136,7 +138,7 @@ uintmax_t Broom::untrack_unique_sizes() {
 //             // not a unique size. Keep such entries
 //         } else {
 //             // a unique one. Untrack such an entry
-//             std::remove_if(m_tracked_entries.begin(), m_tracked_entries.end(), [contents_entry](Entry e) -> bool {
+//             std::remove_if(m_tracked_filepaths.begin(), m_tracked_filepaths.end(), [contents_entry](Entry e) -> bool {
 //                 return (e.compare_checksums(contents_entry.first));
 //             });
 //             untracked++;
@@ -163,7 +165,7 @@ void Broom::find_duplicates() {
 
         << std::endl;
     } else {
-        size_t startsize = m_tracked_entries.size();
+        size_t startsize = m_tracked_filepaths.size();
         std::cout << "Tracking " << startsize << std::endl;
 
         uintmax_t global_untracked = 0;

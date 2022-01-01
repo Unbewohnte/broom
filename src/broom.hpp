@@ -41,8 +41,8 @@ protected:
     uintmax_t m_sweeped_files;
     // how many bytes was (would be ?) freed
     uintmax_t m_sweeped_size;
-    // entries that possibly contain duplicates
-    std::vector<Entry> m_tracked_entries;
+    // paths to tracked files
+    std::vector<std::filesystem::path> m_tracked_filepaths;
 
 public:
     Broom(Options options);
@@ -51,7 +51,7 @@ public:
     // Print current statistics
     void print_statistics();
 
-    // get all entities from path recursively and track them
+    // recursively track every file that lies in given path
     void track(const std::filesystem::path path);
 
     // find all duplicates in the directory
