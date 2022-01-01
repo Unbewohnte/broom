@@ -51,7 +51,8 @@ public:
     // Print current statistics
     void print_statistics();
 
-    // recursively track every file that lies in given path
+    // recursively track every file that lies in given path. Throws an invalid_argument
+    // error in case path does not exist
     void track(const std::filesystem::path path);
 
     // find all duplicates in the directory

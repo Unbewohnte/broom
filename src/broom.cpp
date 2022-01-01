@@ -40,22 +40,33 @@ void Broom::print_statistics() {
     << std::endl;
 };
 
-// get all files from path recursively and track them
-void Broom::track(const std::filesystem::path dir) {
+// recursively track every file that lies in given path. Throws an invalid_argument
+// error in case path does not exist
+void Broom::track(const std::filesystem::path path) {
     auto t0 = std::chrono::high_resolution_clock::now();
 
-    std::filesystem::directory_options options =  (
-        std::filesystem::directory_options::follow_directory_symlink |
-        std::filesystem::directory_options::skip_permission_denied
-    );
-
-    for (std::filesystem::directory_entry dir_entry : std::filesystem::recursive_directory_iterator(dir, options)) {
-        if (dir_entry.is_directory()) {
-            continue;
-        };
-
-        m_tracked_filepaths.push_back(dir_entry);
+    // check if given path even exists
+    if (!std::filesystem::exists(path)) {
+        throw std::invalid_argument("\"" + path.string() + "\"" + " does not exist !");
     };
+
+    if (std::filesystem::is_directory(path)) {
+        // it`s a directory. Track every regular file recursively
+        std::filesystem::directory_options options =  (
+            std::filesystem::directory_options::skip_permission_denied
+        );
+
+        for (std::filesystem::directory_entry dir_entry : std::filesystem::recursive_directory_iterator(path, options)) {
+            if (!dir_entry.is_regular_file()) {
+                continue;
+            };
+
+            m_tracked_filepaths.push_back(dir_entry);
+        };
+    } else if (std::filesystem::is_regular_file(path)) {
+        m_tracked_filepaths.push_back(path);
+    };
+
 
     if (m_benchmarking) {
         auto tracking_time = std::chrono::high_resolution_clock::now();
@@ -78,6 +89,7 @@ uintmax_t Broom::untrack_unique_sizes() {
         // if yes --> increment occurences counter
         // if not --> add it to the map with a counter of 1
         uintmax_t filesize = std::filesystem::file_size(filepath);
+
         auto iterator = sizes_map.find(filesize);
         if (iterator == sizes_map.end()) {
             // there is no such size
@@ -161,9 +173,7 @@ void Broom::find_duplicates() {
         std::cout
         << "Untracking by size took "
         << std::chrono::duration_cast<std::chrono::milliseconds>(sizes_untrack_time - t0).count()
-        << " ms" << std::endl
-
-        << std::endl;
+        << " ms" << std::endl;
     } else {
         size_t startsize = m_tracked_filepaths.size();
         std::cout << "Tracking " << startsize << std::endl;

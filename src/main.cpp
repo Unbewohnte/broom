@@ -18,6 +18,7 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include <iostream>
+#include <stdexcept>
 #include <string.h>
 #include <vector>
 
@@ -82,13 +83,11 @@ int main(int argc, char* argv[]) {
         }
         else {
             // add path
-            if (std::filesystem::exists(argv[i])) {
-                tracked_path = argv[i];
-            };
+            tracked_path = argv[i];
         };
     };
 
-    // no path was specified at all or every path was nonexistent
+    // no path was specified at all
     if (tracked_path.string() == "") {
         print_help();
         return 1;
@@ -97,7 +96,12 @@ int main(int argc, char* argv[]) {
 
     Broom broom(options);
 
-    broom.track(tracked_path);
+    try {
+        broom.track(tracked_path);
+    } catch(const std::invalid_argument& e) {
+        std::cout << e.what() << std::endl;
+        return 1;
+    };
     broom.find_duplicates();
 
     return 0;
