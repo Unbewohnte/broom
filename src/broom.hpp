@@ -42,7 +42,7 @@ protected:
     // how many bytes was (would be ?) freed
     uintmax_t m_sweeped_size;
     // paths to tracked files
-    std::vector<std::filesystem::path> m_tracked_filepaths;
+    std::vector<Entry> m_tracked_entries;
 
 public:
     Broom(Options options);
@@ -50,6 +50,10 @@ public:
 
     // Print current statistics
     void print_statistics();
+
+    // returns amount of regular files in path, searching recursively.
+    // Throws an invalid_argument error in case path does not exist
+    uintmax_t amount_of_files(const std::filesystem::path path);
 
     // recursively track every file that lies in given path. Throws an invalid_argument
     // error in case path does not exist

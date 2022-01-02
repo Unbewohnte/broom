@@ -21,23 +21,26 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 
 // A wrapper for every file with all necessary information
 Entry::Entry(const std::filesystem::path entry_path) {
-    // check for existense and being a directory
-    if (!std::filesystem::exists(entry_path) || std::filesystem::is_directory(entry_path)) {
-        throw "Does not exist or a directory";
-    };
-
     // path
     path = entry_path;
+};
 
+Entry::~Entry() {};
+
+// sets this entry`s filesize
+void Entry::get_size() {
     // filesize
     filesize = std::filesystem::file_size(path);
+};
 
+// calculates and sets this entry`s checksum
+void Entry::get_checksum() {
     // checksum
     std::fstream entry_file;
     entry_file.open(path);
 
     if (!entry_file.is_open()) {
-        throw "Could not open file";
+        throw std::ifstream::failure("Could not open \"" + path.filename().string() + "\"");
     }
 
     // TODO(Properly test it)
@@ -64,7 +67,6 @@ Entry::Entry(const std::filesystem::path entry_path) {
     entry_file.close();
 };
 
-Entry::~Entry() {};
 
 // Compare this entry`s checksum with the other one.
 // If the checksums are the same -> returns true, else -> false

@@ -23,7 +23,7 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include <filesystem>
 #include <fstream>
 
-// 3 chunks (beginning and end of the file)
+// 2 chunks (beginning and end of the file)
 const uint8_t CHUNK_SIZE = 24;
 const uint8_t CHECKSUM_SIZE = CHUNK_SIZE * 2;
 
@@ -38,11 +38,17 @@ public:
     Entry(const std::filesystem::path entry_path);
     ~Entry();
 
+    // sets this entry`s filesize
+    void get_size();
+
+    // calculates and sets this entry`s checksum
+    void get_checksum();
+
     // Compare this entry`s checksum with the other one.
     // If the checksums are the same -> returns true, else -> false
     bool compare_checksums(const char other_checksum[CHECKSUM_SIZE]);
 
-    // Remove entry from the disk
+    // REMOVE entry from the disk
     void remove();
 };
 
