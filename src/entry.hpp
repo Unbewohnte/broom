@@ -22,18 +22,18 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <filesystem>
 #include <fstream>
+#include <sstream>
+#include <iomanip>
 
-// 2 chunks (beginning and end of the file)
-const uint8_t CHUNK_SIZE = 24;
-const uint8_t CHECKSUM_SIZE = CHUNK_SIZE * 2;
+// 2 pieces (beginning and end of the file)
+const uint8_t PIECE_SIZE = 24;
 
 // A wrapper for every file with all necessary information
 class Entry {
 public:
     std::filesystem::path path;
     uintmax_t filesize;
-    char checksum[CHECKSUM_SIZE];
-
+    std::string pieces; // 2 hex-represented pieces of file (beginning and end)
 
     Entry(const std::filesystem::path entry_path);
     ~Entry();
@@ -41,12 +41,9 @@ public:
     // sets this entry`s filesize
     void get_size();
 
-    // calculates and sets this entry`s checksum
-    void get_checksum();
-
-    // Compare this entry`s checksum with the other one.
-    // If the checksums are the same -> returns true, else -> false
-    bool compare_checksums(const char other_checksum[CHECKSUM_SIZE]);
+    // reads 2 pieces from the beginning and the end of a file, converts them into
+    // a convenient hex-encoded string
+    void get_pieces();
 
     // REMOVE entry from the disk
     void remove();

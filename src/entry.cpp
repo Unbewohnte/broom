@@ -19,6 +19,11 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "entry.hpp"
 
+#include <iostream>
+#include <cerrno>
+#include <cstring>
+
+
 // A wrapper for every file with all necessary information
 Entry::Entry(const std::filesystem::path entry_path) {
     // path
@@ -29,54 +34,50 @@ Entry::~Entry() {};
 
 // sets this entry`s filesize
 void Entry::get_size() {
-    // filesize
     filesize = std::filesystem::file_size(path);
 };
 
-// calculates and sets this entry`s checksum
-void Entry::get_checksum() {
-    // checksum
+// reads 2 pieces from the beginning and the end of a file, converts them into
+// a convenient hex-encoded string
+void Entry::get_pieces() {
     std::fstream entry_file;
     entry_file.open(path);
 
     if (!entry_file.is_open()) {
-        throw std::ifstream::failure("Could not open \"" + path.filename().string() + "\"");
+        throw std::ifstream::failure("Could not open \"" + path.string() + "\"; reason: " + std::string(std::strerror(errno)) + "\n");
     }
 
     // TODO(Properly test it)
-    if (filesize <= CHECKSUM_SIZE) {
-        entry_file.read(checksum, CHECKSUM_SIZE);
+    char pieces_buffer[PIECE_SIZE * 2];
+    if (filesize <= PIECE_SIZE * 2) {
+        // can`t take whole 2 pieces !
+        // read the whole file then
+        entry_file.read(pieces_buffer, filesize);
     } else {
-        char start_buf[CHUNK_SIZE];
-        entry_file.read(start_buf, CHUNK_SIZE);
+        // read CHUNK_SIZE bytes from the beginning of the file
+        char start_buf[PIECE_SIZE];
+        entry_file.read(start_buf, PIECE_SIZE);
+        for (uint8_t i = 0; i < PIECE_SIZE; i++) {
+            pieces_buffer[i] = start_buf[i];
+        };
 
-        entry_file.seekg(CHUNK_SIZE, std::ios::end);
-        char end_buf[CHUNK_SIZE];
-        entry_file.read(end_buf, CHUNK_SIZE);
-
-        for (uint8_t i = 0; i < CHECKSUM_SIZE; i++) {
-            if (i < CHUNK_SIZE) {
-                checksum[i] = start_buf[i];
-            }
-            else if (i > CHUNK_SIZE) {
-                checksum[i] = end_buf[i - CHUNK_SIZE];
-            };
+        // jump to the last CHUNK_SIZE bytes of the file and read the as well
+        entry_file.seekg(PIECE_SIZE, std::ios::end);
+        char end_buf[PIECE_SIZE];
+        entry_file.read(end_buf, PIECE_SIZE);
+        for (uint8_t i = PIECE_SIZE; i < PIECE_SIZE * 2; i++) {
+            pieces_buffer[i] = end_buf[i - PIECE_SIZE];
         };
     };
-
     entry_file.close();
-};
 
-
-// Compare this entry`s checksum with the other one.
-// If the checksums are the same -> returns true, else -> false
-bool Entry::compare_checksums(const char other_checksum[CHECKSUM_SIZE]) {
-    for (uint8_t i = 0; i < CHECKSUM_SIZE; i++) {
-        if (checksum[i] != other_checksum[i]) {
-            return false;
-        };
+    // make a convenient hex string out of pure bytes
+    std::stringstream pieces_hex;
+    for (uint8_t i = 0; i < PIECE_SIZE * 2; i++) {
+        pieces_hex << std::hex << static_cast<unsigned>(pieces_buffer[i]);
     };
-    return true;
+
+    pieces = pieces_hex.str();
 };
 
 // Remove entry from the disk

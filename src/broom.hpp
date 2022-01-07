@@ -48,13 +48,6 @@ public:
     Broom(Options options);
     ~Broom();
 
-    // Print current statistics
-    void print_statistics();
-
-    // returns amount of regular files in path, searching recursively.
-    // Throws an invalid_argument error in case path does not exist
-    uintmax_t amount_of_files(const std::filesystem::path path);
-
     // recursively track every file that lies in given path. Throws an invalid_argument
     // error in case path does not exist
     void track(const std::filesystem::path path);
@@ -66,7 +59,7 @@ public:
     // that are no longer being tracked
     uintmax_t untrack_unique_sizes();
 
-    // removes entries with unique first and last 20 bytes. Returns amount of
+    // removes entries with the same content-pieces. Returns amount of
     // files that are no longer being tracked
     uintmax_t untrack_unique_contents();
 
