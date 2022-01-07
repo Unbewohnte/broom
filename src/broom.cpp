@@ -44,7 +44,7 @@ void Broom::track(const std::filesystem::path path) {
     // check if given path even exists
     if (!std::filesystem::exists(path)) {
         throw std::invalid_argument("\"" + path.string() + "\"" + " does not exist !");
-    };
+    }
 
     if (std::filesystem::is_directory(path)) {
         // it`s a directory. Track every regular file recursively
@@ -63,7 +63,7 @@ void Broom::track(const std::filesystem::path path) {
     } else if (std::filesystem::is_regular_file(path)) {
         Entry entry(path);
         m_tracked_entries.push_back(entry);
-    };
+    }
 
 
     if (m_benchmarking) {
@@ -73,7 +73,7 @@ void Broom::track(const std::filesystem::path path) {
         << "[BENCHMARK] Tracking took "
         << std::chrono::duration_cast<std::chrono::milliseconds>(tracking_time - t0).count()
         << " ms" << std::endl;
-    };
+    }
 };
 
 // removes entries with unique file sizes. Returns amount of files
@@ -95,8 +95,8 @@ uintmax_t Broom::untrack_unique_sizes() {
         } else {
             // there is such size
             sizes_map[iterator->first]++;
-        };
-    };
+        }
+    }
 
     uintmax_t untracked = 0;
     m_tracked_entries.erase(std::remove_if(m_tracked_entries.begin(), m_tracked_entries.end(), [&untracked, sizes_map](Entry entry) -> bool{
@@ -149,7 +149,7 @@ uintmax_t Broom::untrack_unique_contents() {
         } else {
             // increment occurences counter
             contents_map[map_iter->first]++;
-        };
+        }
 
         entry_iter++;
     };
@@ -190,7 +190,7 @@ void Broom::find_duplicates() {
         << "[BENCHMARK] Untracking by size took "
         << std::chrono::duration_cast<std::chrono::milliseconds>(sizes_untrack_time - t0).count()
         << " ms" << std::endl;
-    };
+    }
 
     // untrack by contents
     uintmax_t untracked_by_contents = untrack_unique_contents();
@@ -203,12 +203,39 @@ void Broom::find_duplicates() {
         << "[BENCHMARK] Untracking by contents took "
         << std::chrono::duration_cast<std::chrono::milliseconds>(contents_untrack_time - sizes_untrack_time).count()
         << " ms" << std::endl;
-    };
+    }
 
     std::cout << "[INFO] Untracked " << untracked_by_contents << " unique contents" << std::endl;
 
     std::cout << "[INFO] Duplicates: " << m_tracked_entries.size() << std::endl;
 
+    create_duplicates_list();
+
+    std::cout << "[INFO] Created a duplicates list" << std::endl;
+};
+
+// saves current list of duplicate file paths into a file in dir
+void Broom::create_duplicates_list(const std::filesystem::path dir, const std::string filename) {
+    if (!std::filesystem::exists(dir)) {
+        // create it then
+        bool created = std::filesystem::create_directories(dir);
+        if (!created) {
+            throw "Could not create a directory";
+        }
+    }
+
+    // create output file there
+    std::fstream outfile(dir / filename, std::ios::out);
+    if (!outfile.is_open()) {
+        throw "Could not create an output file";
+    }
+
+    for (const Entry duplicate_entry : m_tracked_entries) {
+        // log every duplicate entry
+        outfile << duplicate_entry.path << std::endl;
+    }
+
+    outfile.close();
 };
 
 // remove ALL duplicate files

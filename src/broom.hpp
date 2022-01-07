@@ -35,6 +35,7 @@ class Broom {
 protected:
     // enable/disable benchmarking output
     bool m_benchmarking;
+    // TODO(think about how sweeping should work)
     bool m_sweeping;
 
     // how many files has been (would be ?) "sweeped"
@@ -63,7 +64,10 @@ public:
     // files that are no longer being tracked
     uintmax_t untrack_unique_contents();
 
-    // remove ALL duplicate files
+    // saves current list of duplicate file paths into a file
+    void create_duplicates_list(const std::filesystem::path dir = ".", const std::string filename = "duplicate_files_list.txt");
+
+    // TODO
     void sweep_all();
 };
 
