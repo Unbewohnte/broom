@@ -1,6 +1,4 @@
-bin/broom
-bin/broom_old
-bin/broom_old_old
+bin/
 build/CMakeFiles/
 build/cmake_install.cmake
 build/CMakeCache.txt
