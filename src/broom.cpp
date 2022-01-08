@@ -215,8 +215,12 @@ uintmax_t Broom::m_find_duplicates() {
 
     // mark duplicate entries
 
-    for (entry::Entry& duplicate_entry : m_tracked_entries) {
-        duplicate_entry.group = group::DUPLICATE;
+    for (entry::Entry& entry : m_tracked_entries) {
+        if (entry.group == group::EMPTY) {
+            // do not mess up grouping
+            continue;
+        }
+        entry.group = group::DUPLICATE;
     }
 
     return m_tracked_entries.size();
@@ -258,6 +262,7 @@ uintmax_t Broom::m_find_empty_files() {
     uintmax_t found_empty_files = 0;
     for (entry::Entry& entry : m_tracked_entries) {
         if (entry.filesize == 0) {
+            // empty files can`t be considered as duplicates. assign a group
             entry.group = group::EMPTY;
             found_empty_files++;
         }
