@@ -26,6 +26,9 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "entry.hpp"
 #include "broom.hpp"
+#include "group.hpp"
+
+namespace broom {
 
 Broom::Broom(Options options) {
     m_benchmarking = options.benchmarking;
@@ -58,12 +61,12 @@ void Broom::track(const std::filesystem::path path) {
                 continue;
             };
 
-            Entry entry(dir_entry.path());
+            entry::Entry entry(dir_entry.path());
             m_tracked_entries.push_back(entry);
         }
     } else if (std::filesystem::is_regular_file(path)) {
         // just a file
-        Entry entry(path);
+        entry::Entry entry(path);
         m_tracked_entries.push_back(entry);
     }
 
@@ -76,11 +79,13 @@ void Broom::track(const std::filesystem::path path) {
         << std::chrono::duration_cast<std::chrono::milliseconds>(tracking_time - t0).count()
         << " ms" << std::endl;
     }
+
+    std::cout << "[INFO] Tracking " << m_tracked_entries.size() << " files" << std::endl;
 };
 
 // removes entries with unique file sizes. Returns amount of files
 // that are no longer being tracked
-uintmax_t Broom::untrack_unique_sizes() {
+uintmax_t Broom::m_untrack_unique_sizes() {
     // key: size, value: amount of occurences
     std::map<uintmax_t, uintmax_t> sizes_map;
 
@@ -88,8 +93,6 @@ uintmax_t Broom::untrack_unique_sizes() {
         // check if size of this entry is already in the map
         // if yes --> increment occurences counter
         // if not --> add it to the map with a counter of 1
-        entry_iter->get_size();
-
         auto iterator = sizes_map.find(entry_iter->filesize);
         if (iterator == sizes_map.end()) {
             // there is no such size
@@ -101,7 +104,7 @@ uintmax_t Broom::untrack_unique_sizes() {
     }
 
     uintmax_t untracked = 0;
-    m_tracked_entries.erase(std::remove_if(m_tracked_entries.begin(), m_tracked_entries.end(), [&untracked, sizes_map](Entry entry) -> bool{
+    m_tracked_entries.erase(std::remove_if(m_tracked_entries.begin(), m_tracked_entries.end(), [&untracked, sizes_map](entry::Entry entry) -> bool{
         auto iter = sizes_map.find(entry.filesize);
         if (iter->second == 1) {
             // unique
@@ -109,20 +112,15 @@ uintmax_t Broom::untrack_unique_sizes() {
             return true;
         };
 
-        // std::cout << "duplicate fsize: " << iter->first << " occurences: " << iter->second << std::endl;
-
         return false;
     }), m_tracked_entries.end());
-
-    // std::cout << "Size after untracking by size: " << m_tracked_entries.size() << std::endl;
-
 
     return untracked;
 };
 
 // removes entries with the same content-pieces. Returns amount of
 // files that are no longer being tracked
-uintmax_t Broom::untrack_unique_contents() {
+uintmax_t Broom::m_untrack_unique_contents() {
     // contents, occurences
     std::map<std::string, uintmax_t> contents_map;
     std::map<std::string, uintmax_t>::iterator map_iter;
@@ -133,12 +131,17 @@ uintmax_t Broom::untrack_unique_contents() {
         // if yes --> increment occurences counter
         // if not --> add it to the map with a counter of 1
 
+        if (entry_iter->filesize == 0) {
+            // that`s an empty file. Skip it
+            entry_iter++;
+            continue;
+        }
+
         try{
             // can get "permission denied" when opening file
             entry_iter->get_pieces();
         } catch(const std::ifstream::failure& e) {
             // there is nothing we can do. Untrack this entry
-            // std::cerr << e.what();
             entry_iter = m_tracked_entries.erase(entry_iter);
             continue;
         }
@@ -157,7 +160,7 @@ uintmax_t Broom::untrack_unique_contents() {
     };
 
     uintmax_t untracked = 0;
-    m_tracked_entries.erase(std::remove_if(m_tracked_entries.begin(), m_tracked_entries.end(), [&untracked, contents_map](Entry entry) -> bool {
+    m_tracked_entries.erase(std::remove_if(m_tracked_entries.begin(), m_tracked_entries.end(), [&untracked, contents_map](entry::Entry entry) -> bool {
         auto iter = contents_map.find(entry.pieces);
         if (iter->second == 1) {
             // unique
@@ -171,17 +174,16 @@ uintmax_t Broom::untrack_unique_contents() {
     return untracked;
 };
 
-
-// find all duplicates among tracked entries, stop tracking uniques
-void Broom::find_duplicates() {
+// finds all duplicates among tracked entries and marks them with appropriate group.
+// Returns amount of duplicate files
+uintmax_t Broom::m_find_duplicates() {
     auto t0 = std::chrono::high_resolution_clock::now();
 
     // print how many files are being tracked
     uintmax_t global_untracked = m_tracked_entries.size();
-    std::cout << "[INFO] Tracking " << m_tracked_entries.size() << " files" << std::endl;
 
     // untrack by size
-    uintmax_t untracked_by_size = untrack_unique_sizes();
+    uintmax_t untracked_by_size = m_untrack_unique_sizes();
     global_untracked += untracked_by_size;
     std::cout << "[INFO] Untracked " << untracked_by_size << " unique sizes" << std::endl;
 
@@ -195,7 +197,7 @@ void Broom::find_duplicates() {
     }
 
     // untrack by contents
-    uintmax_t untracked_by_contents = untrack_unique_contents();
+    uintmax_t untracked_by_contents = m_untrack_unique_contents();
     global_untracked += untracked_by_contents;
 
     auto contents_untrack_time = std::chrono::high_resolution_clock::now();
@@ -209,37 +211,72 @@ void Broom::find_duplicates() {
 
     std::cout << "[INFO] Untracked " << untracked_by_contents << " unique contents" << std::endl;
 
-    std::cout << "[INFO] Duplicates: " << m_tracked_entries.size() << std::endl;
+    std::cout << "[INFO] Found " << m_tracked_entries.size() << " possible duplicate files" << std::endl;
 
-    create_duplicates_list();
+    // mark duplicate entries
 
-    std::cout << "[INFO] Created a duplicates list" << std::endl;
+    for (entry::Entry& duplicate_entry : m_tracked_entries) {
+        duplicate_entry.group = group::DUPLICATE;
+    }
+
+    return m_tracked_entries.size();
 };
 
-// saves current list of duplicate file paths into a file in dir
-void Broom::create_duplicates_list(const std::filesystem::path dir, const std::string filename) {
+// creates a list of duplicate, empty files into a file
+void Broom::create_scan_results_list(const std::filesystem::path dir, const std::string filename) {
     if (!std::filesystem::exists(dir)) {
         // create it then
         bool created = std::filesystem::create_directories(dir);
         if (!created) {
-            throw "Could not create a directory";
+            throw "Could not create a directory to save scan results in";
         }
     }
 
     // create output file there
     std::fstream outfile(dir / filename, std::ios::out);
     if (!outfile.is_open()) {
-        throw "Could not create an output file";
+        throw "Could not create a scan results file";
     }
 
-    for (const Entry duplicate_entry : m_tracked_entries) {
-        // log every duplicate entry
-        outfile << duplicate_entry.path << std::endl;
+    for (const entry::Entry entry : m_tracked_entries) {
+        // log every entry and its group
+        if (entry.group == group::EMPTY) {
+            outfile << entry.path << " --- is an empty file" << std::endl;
+        } else if (entry.group == group::DUPLICATE) {
+            outfile << entry.path << " --- is a duplicate of another file" << std::endl;
+        }
     }
 
     outfile.close();
+
+    std::cout << "[INFO] Created scan results file" << std::endl;
+};
+
+// finds empty files among tracked entries and gives them appropriate group
+// Returns amount of found empty files
+uintmax_t Broom::m_find_empty_files() {
+    uintmax_t found_empty_files = 0;
+    for (entry::Entry& entry : m_tracked_entries) {
+        if (entry.filesize == 0) {
+            entry.group = group::EMPTY;
+            found_empty_files++;
+        }
+    }
+
+    std::cout << "[INFO] Found " << found_empty_files << " empty files" << std::endl;
+
+    return found_empty_files;
+};
+
+// scans directory for duplicates and empty files
+void Broom::scan() {
+    m_find_empty_files();
+    m_find_duplicates();
 };
 
 // remove ALL duplicate files
-void Broom::sweep_all() {
+void Broom::sweep() {
 };
+
+
+}

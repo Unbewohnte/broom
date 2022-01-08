@@ -13,4 +13,4 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -Werror -O2")
 
 set(EXECUTABLE_OUTPUT_PATH ../bin)
 
-add_executable(broom ../src/main.cpp ../src/entry.cpp ../src/broom.cpp)
+add_executable(broom ../src/main.cpp ../src/entry.cpp ../src/broom.cpp ../src/group.hpp)

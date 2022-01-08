@@ -26,15 +26,16 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include "broom.hpp"
 
 // Broom version number
-#define VERSION "v0.1.0"
+#define VERSION "v0.1.1"
 
 void print_help() {
     std::cout
-    << "broom [FLAGS..] [COMMAND] [FILES|DIRECTORIES...]" << std::endl << std::endl
-    << "FLAGS" << std::endl
+    << "broom [FLAGS..] [COMMAND] [DIRECTORY]" << std::endl << std::endl
+    << "[FLAGS]" << std::endl
     << "-v | --version -> print version information and exit" << std::endl
     << "-h | --help -> print this message and exit" << std::endl << std::endl
-    << "COMMANDS" << std::endl
+
+    << "[COMMANDS]" << std::endl
     << "sweep -> scan for duplicate files and delete (sweep) all of them but the last one" << std::endl
     << "scan -> scan for duplicate files and output information in a file" << std::endl
     << std::endl;
@@ -43,7 +44,8 @@ void print_help() {
 void print_version() {
     std::cout
     << "broom " << VERSION << std::endl
-    << "a command line utility to locate and manage duplicate files" << std::endl << std::endl
+    << "incurable hoarder`s helpful friend" << std::endl << std::endl
+
     << "Copyright (C) 2021  Kasyanov Nikolay Alexeevich (Unbewohnte (me@unbewohnte.xyz))" << std::endl
     << "This program comes with ABSOLUTELY NO WARRANTY." << std::endl
     << "This is free software, and you are welcome to redistribute it" << std::endl
@@ -52,7 +54,7 @@ void print_version() {
 };
 
 int main(int argc, char* argv[]) {
-    Options options;
+    broom::Options options;
     std::filesystem::path tracked_path;
 
     if (argc < 2) {
@@ -62,7 +64,7 @@ int main(int argc, char* argv[]) {
 
     // process command line arguments
     for (unsigned int i = 1; i < argc; i++) {
-        // flags -> command -> directories&&files
+        // flags -> command -> directory
 
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             print_help();
@@ -83,7 +85,7 @@ int main(int argc, char* argv[]) {
         }
         else {
             // add path
-            tracked_path = argv[i];
+            tracked_path = std::filesystem::path(argv[i]);
         };
     };
 
@@ -94,10 +96,11 @@ int main(int argc, char* argv[]) {
     };
 
 
-    Broom broom(options);
+    broom::Broom broom(options);
     try {
         broom.track(tracked_path);
-        broom.find_duplicates();
+        broom.scan();
+        broom.create_scan_results_list();
     } catch(const std::invalid_argument& e) {
         std::cerr
         << "[ERROR] Invalid argument: " << std::endl

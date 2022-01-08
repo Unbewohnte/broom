@@ -25,29 +25,35 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include <sstream>
 #include <iomanip>
 
-// 2 pieces (middle and end of the file)
-const uint8_t PIECE_SIZE = 16;
+#include "group.hpp"
 
-// A wrapper for every file with all necessary information
+
+namespace entry {
+// 3 pieces (beginning, middle and end of the file)
+const uint8_t PIECE_SIZE = 6;
+const uint8_t PIECES_AMOUNT = 3;
+
+// A wrapper for every file in filesystem with all necessary information
 class Entry {
 public:
-    std::filesystem::path path;
-    uintmax_t filesize;
-    std::string pieces; // 2 hex-represented pieces of file
+    std::filesystem::path path; // set via constructor
+    uintmax_t filesize; // set via constructor
+    std::string pieces; // 3 hex-represented pieces of file; set only via a method call to not stress the disk
+    group::Group group; // set externally
 
     Entry(const std::filesystem::path entry_path);
     ~Entry();
 
-    // sets this entry`s filesize
-    void get_size();
-
-    // reads 2 pieces from the middle and the end of a file, converts them into
+    // reads 3 pieces from the beginning, middle and the end of a file, converts them into
     // a convenient hex-encoded string
     void get_pieces();
 
     // REMOVE entry from the disk
     void remove();
 };
+
+}
+
 
 
 #endif
