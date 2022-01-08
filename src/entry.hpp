@@ -25,15 +25,15 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include <sstream>
 #include <iomanip>
 
-// 2 pieces (beginning and end of the file)
-const uint8_t PIECE_SIZE = 24;
+// 2 pieces (middle and end of the file)
+const uint8_t PIECE_SIZE = 16;
 
 // A wrapper for every file with all necessary information
 class Entry {
 public:
     std::filesystem::path path;
     uintmax_t filesize;
-    std::string pieces; // 2 hex-represented pieces of file (beginning and end)
+    std::string pieces; // 2 hex-represented pieces of file
 
     Entry(const std::filesystem::path entry_path);
     ~Entry();
@@ -41,7 +41,7 @@ public:
     // sets this entry`s filesize
     void get_size();
 
-    // reads 2 pieces from the beginning and the end of a file, converts them into
+    // reads 2 pieces from the middle and the end of a file, converts them into
     // a convenient hex-encoded string
     void get_pieces();
 

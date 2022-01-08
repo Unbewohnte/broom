@@ -49,18 +49,20 @@ void Broom::track(const std::filesystem::path path) {
     if (std::filesystem::is_directory(path)) {
         // it`s a directory. Track every regular file recursively
         std::filesystem::directory_options options =  (
-            std::filesystem::directory_options::skip_permission_denied
+        std::filesystem::directory_options::skip_permission_denied
         );
 
         for (auto dir_entry : std::filesystem::recursive_directory_iterator(path, options)) {
             if (!dir_entry.is_regular_file()) {
+                // skip everything that we cannot process so easily
                 continue;
             };
 
             Entry entry(dir_entry.path());
             m_tracked_entries.push_back(entry);
-        };
+        }
     } else if (std::filesystem::is_regular_file(path)) {
+        // just a file
         Entry entry(path);
         m_tracked_entries.push_back(entry);
     }
@@ -127,7 +129,7 @@ uintmax_t Broom::untrack_unique_contents() {
 
     for (auto entry_iter = m_tracked_entries.begin(); entry_iter != m_tracked_entries.end();) {
         // the same logic:
-        // check if contents of this entry is already in the map
+        // check if contents of this entry are already in the map
         // if yes --> increment occurences counter
         // if not --> add it to the map with a counter of 1
 

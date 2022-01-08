@@ -88,21 +88,33 @@ int main(int argc, char* argv[]) {
     };
 
     // no path was specified at all
-    if (tracked_path.string() == "") {
+    if (tracked_path.empty()) {
         print_help();
         return 1;
     };
 
 
     Broom broom(options);
-
     try {
         broom.track(tracked_path);
+        broom.find_duplicates();
     } catch(const std::invalid_argument& e) {
-        std::cout << e.what() << std::endl;
+        std::cerr
+        << "[ERROR] Invalid argument: " << std::endl
+        << e.what() << std::endl;
+        return 1;
+
+    } catch(const std::filesystem::filesystem_error& e) {
+        std::cerr
+        << "[ERROR] FS error: " << std::endl
+        << e.what() << std::endl;
+        return 1;
+
+    } catch(...) {
+        std::cerr
+        << "[ERROR] Unexpected exception" << std::endl;
         return 1;
     };
-    broom.find_duplicates();
 
     return 0;
 };

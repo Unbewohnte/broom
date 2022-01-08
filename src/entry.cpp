@@ -37,7 +37,8 @@ void Entry::get_size() {
     filesize = std::filesystem::file_size(path);
 };
 
-// reads 2 pieces from the beginning and the end of a file, converts them into
+
+// reads 2 pieces from the middle and the end of a file, converts them into
 // a convenient hex-encoded string
 void Entry::get_pieces() {
     std::fstream entry_file;
@@ -47,18 +48,20 @@ void Entry::get_pieces() {
         throw std::ifstream::failure("Could not open \"" + path.string() + "\"; reason: " + std::string(std::strerror(errno)) + "\n");
     }
 
-    // TODO(Properly test it)
     char pieces_buffer[PIECE_SIZE * 2];
     if (filesize <= PIECE_SIZE * 2) {
         // can`t take whole 2 pieces !
         // read the whole file then
         entry_file.read(pieces_buffer, filesize);
     } else {
-        // read CHUNK_SIZE bytes from the beginning of the file
-        char start_buf[PIECE_SIZE];
-        entry_file.read(start_buf, PIECE_SIZE);
+        uintmax_t middle_of_the_file = (double) filesize / 2.0 - PIECE_SIZE;
+
+        entry_file.seekg(middle_of_the_file, std::ios::beg);
+        // read CHUNK_SIZE bytes from the middle of the file
+        char middle_buf[PIECE_SIZE];
+        entry_file.read(middle_buf, PIECE_SIZE);
         for (uint8_t i = 0; i < PIECE_SIZE; i++) {
-            pieces_buffer[i] = start_buf[i];
+            pieces_buffer[i] = middle_buf[i];
         };
 
         // jump to the last CHUNK_SIZE bytes of the file and read the as well
@@ -78,6 +81,8 @@ void Entry::get_pieces() {
     };
 
     pieces = pieces_hex.str();
+
+    std::cout << pieces << std::endl;
 };
 
 // Remove entry from the disk
