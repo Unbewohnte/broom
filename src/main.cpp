@@ -21,6 +21,7 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include <stdexcept>
 #include <string.h>
 #include <vector>
+#include <future>
 
 #include "entry.hpp"
 #include "broom.hpp"
@@ -98,24 +99,23 @@ int main(int argc, char* argv[]) {
 
     broom::Broom broom(options);
     try {
-        broom.track(tracked_path);
-        broom.scan();
-        broom.create_scan_results_list();
-    } catch(const std::invalid_argument& e) {
-        std::cerr
-        << "[ERROR] Invalid argument: " << std::endl
-        << e.what() << std::endl;
-        return 1;
+        std::vector<entry::Entry> tracked_entries = broom.track(tracked_path);
+        broom.find_empty_files(tracked_entries);
 
-    } catch(const std::filesystem::filesystem_error& e) {
-        std::cerr
-        << "[ERROR] FS error: " << std::endl
-        << e.what() << std::endl;
-        return 1;
+        // get contents for each entry first
+        //auto handle = std::async(std::launch::async, [&tracked_entries]() {
+        //   for (entry::Entry& e : tracked_entries) {
+        //        e.get_pieces();
+        //    }
+        //});
 
-    } catch(...) {
+        //broom.untrack_unique_contents(tracked_entries);
+        broom.find_duplicates(tracked_entries);
+
+        broom.create_scan_results_list(tracked_entries);
+    } catch(const std::exception& e) {
         std::cerr
-        << "[ERROR] Unexpected exception" << std::endl;
+        << "[ERROR] " << e.what() << std::endl;
         return 1;
     };
 
