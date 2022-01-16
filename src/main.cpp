@@ -22,12 +22,13 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include <string.h>
 #include <vector>
 #include <future>
+#include <algorithm>
 
 #include "entry.hpp"
 #include "broom.hpp"
 
 // Broom version number
-#define VERSION "v0.1.1"
+#define VERSION "v0.1.2"
 
 void print_help() {
     std::cout
@@ -37,8 +38,8 @@ void print_help() {
     << "-h | --help -> print this message and exit" << std::endl << std::endl
 
     << "[COMMANDS]" << std::endl
-    << "sweep -> scan for duplicate files and delete (sweep) all of them but the last one" << std::endl
-    << "scan -> scan for duplicate files and output information in a file" << std::endl
+    << "sweep -> scan for duplicate files, save results in a file and REMOVE empty files" << std::endl
+    << "scan -> scan and save results in a file without touching any files [DEFAULT]" << std::endl
     << std::endl;
 };
 
@@ -46,6 +47,15 @@ void print_version() {
     std::cout
     << "broom " << VERSION << std::endl
     << "incurable hoarder`s helpful friend" << std::endl << std::endl
+
+    << "          _" << std::endl
+    << "         //" << std::endl
+    << "        // " << std::endl
+    << "       //  " << std::endl
+    << "      //   " << std::endl
+    << "   /####/  " << std::endl
+    << "  //////   " << std::endl
+    << " ///////   " << std::endl << std::endl
 
     << "Copyright (C) 2021  Kasyanov Nikolay Alexeevich (Unbewohnte (me@unbewohnte.xyz))" << std::endl
     << "This program comes with ABSOLUTELY NO WARRANTY." << std::endl
@@ -55,7 +65,9 @@ void print_version() {
 };
 
 int main(int argc, char* argv[]) {
-    broom::Options options;
+    bool benchmarking = false;
+    bool sweeping = false;
+
     std::filesystem::path tracked_path;
 
     if (argc < 2) {
@@ -76,13 +88,13 @@ int main(int argc, char* argv[]) {
             return 0;
         }
         else if (strcmp(argv[i], "-b") == 0 || strcmp(argv[i], "--benchmark") == 0) {
-            options.benchmarking = true;
+            benchmarking = true;
         }
         else if (strcmp(argv[i], "sweep") == 0) {
-            options.sweeping = true;
+            sweeping = true;
         }
         else if (strcmp(argv[i], "scan") == 0) {
-            options.sweeping = false;
+            sweeping = false;
         }
         else {
             // add path
@@ -97,22 +109,83 @@ int main(int argc, char* argv[]) {
     };
 
 
-    broom::Broom broom(options);
+    broom::Broom broom;
     try {
+        // auto t0 = std::chrono::high_resolution_clock::now();
+        /*
+        auto tracking_time = std::chrono::high_resolution_clock::now();
+
+        std::cout
+        << "[BENCHMARK] Tracking took "
+        << std::chrono::duration_cast<std::chrono::milliseconds>(tracking_time - t0).count()
+        << " ms" << std::endl;
+        */
+
+        std::cout
+        << "          _" << std::endl
+        << "         //" << std::endl
+        << "        // " << std::endl
+        << "       //  " << std::endl
+        << "      //   " << std::endl
+        << "   /####/  " << std::endl
+        << "  //////   " << std::endl
+        << " ///////   " << std::endl << std::endl;
+        if (sweeping) {
+            std::cout << "[Sweeping]" << std::endl << std::endl;
+        } else {
+            std::cout << "[Scanning]" << std::endl << std::endl;
+        }
+
+        // track files in a given directory
         std::vector<entry::Entry> tracked_entries = broom.track(tracked_path);
-        broom.find_empty_files(tracked_entries);
+        std::cout << "[INFO] Tracking " << tracked_entries.size() << " files" << std::endl;
 
-        // get contents for each entry first
-        //auto handle = std::async(std::launch::async, [&tracked_entries]() {
-        //   for (entry::Entry& e : tracked_entries) {
-        //        e.get_pieces();
-        //    }
-        //});
+        // find empty files
+        uintmax_t empty_files = broom.find_empty_files(tracked_entries);
+        std::cout << "[INFO] Found " << empty_files << " empty files" << std::endl;
 
-        //broom.untrack_unique_contents(tracked_entries);
-        broom.find_duplicates(tracked_entries);
+        // if sweeping - remove empty files right away
+        if (sweeping) {
+            uintmax_t removed = broom.remove_empty_files(tracked_entries);
+            std::cout << "[INFO] Removed " << removed << " empty files" << std::endl;
+        }
 
+        // untrack unique sizes
+        uintmax_t untracked = broom.untrack_unique_sizes(tracked_entries);
+        std::cout << "[INFO] Untracked " << untracked << " files with a unique size" << std::endl;
+
+        // get content pieces for each entry
+        tracked_entries.erase(std::remove_if(tracked_entries.begin(), tracked_entries.end(), [](entry::Entry& entry) -> bool {
+            // ignore possible "permission denied"s
+            try {
+                entry.get_pieces();
+                return false;
+            } catch(...) {
+                return true;
+            }
+        }), tracked_entries.end());
+
+        // untrack unique contents
+        untracked = broom.untrack_unique_contents(tracked_entries);
+        std::cout << "[INFO] Untracked " << untracked << " files with unique contents" << std::endl;
+
+        // mark entries as duplicates
+        for (entry::Entry& entry : tracked_entries) {
+            if (entry.group == group::EMPTY) {
+                // do not mess up grouping
+                continue;
+            }
+            entry.group = group::DUPLICATE;
+        }
+
+        std::cout << "[INFO] " << tracked_entries.size() << " files left being tracked" << std::endl;
+
+        // now only files with a non-unique size and contents are being tracked
+        // are they REALLY duplicates ?
+        // leave the REAL cleanup for the user, saving these entries in a file
         broom.create_scan_results_list(tracked_entries);
+        std::cout << "[INFO] Created scan results file" << std::endl;
+
     } catch(const std::exception& e) {
         std::cerr
         << "[ERROR] " << e.what() << std::endl;

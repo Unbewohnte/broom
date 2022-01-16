@@ -24,42 +24,31 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include <vector>
 
 namespace broom {
-// Broom`s settings
-struct Options {
-    bool sweeping;
-    bool benchmarking;
-};
 
-
-// A class to find and manage duplicate files
+// A class to find and manage duplicate, empty files
 class Broom {
-protected:
-    // enable/disable benchmarking output
-    bool m_benchmarking;
-
 public:
-    Broom(Options options);
+    Broom();
     ~Broom();
 
     // recursively tracks every file that lies in given path. Throws an invalid_argument
     // error in case path does not exist. Returns collected entries
     std::vector<entry::Entry> track(const std::filesystem::path path);
 
+    // untracks entries with unique file sizes. Returns amount of files
+    // that are no longer being tracked
+    uintmax_t untrack_unique_sizes(std::vector<entry::Entry>& tracked_entries);
+
+    // untracks entries with the same content-pieces. Returns amount of
+    // files that are no longer being tracked.
+    uintmax_t untrack_unique_contents(std::vector<entry::Entry>& tracked_entries);
+
     // finds empty files among tracked entries and marks them with the appropriate group.
     // Returns amount of found empty files
     uintmax_t find_empty_files(std::vector<entry::Entry>& tracked_entries);
 
-    // removes entries with unique file sizes. Returns amount of files
-    // that are no longer being tracked
-    uintmax_t untrack_unique_sizes(std::vector<entry::Entry>& tracked_entries);
-
-    // removes entries with the same content-pieces. Returns amount of
-    // files that are no longer being tracked.
-    uintmax_t untrack_unique_contents(std::vector<entry::Entry>& tracked_entries);
-
-    // finds all duplicates among tracked entries and marks them with appropriate group
-    // Returns amount of duplicate files
-    uintmax_t find_duplicates(std::vector<entry::Entry>& tracked_entries);
+    // REMOVES grouped empty files and untracks them after deletion. Returns the amount of removed empty files
+    uintmax_t remove_empty_files(std::vector<entry::Entry>& tracked_entries);
 
     // creates a list of duplicate, empty files into a file
     void create_scan_results_list(const std::vector<entry::Entry> tracked_entries, const std::filesystem::path dir = ".", const std::string filename = "scan_results.txt");
