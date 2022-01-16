@@ -30,7 +30,7 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 
 namespace entry {
 // 3 pieces (beginning, middle and end of the file)
-const uint8_t PIECE_SIZE = 75;
+const uint8_t PIECE_SIZE = 85;
 const uint8_t PIECES_AMOUNT = 3;
 
 // A wrapper for every file in filesystem with all necessary information

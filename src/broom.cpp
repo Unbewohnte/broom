@@ -71,12 +71,12 @@ std::vector<entry::Entry> Broom::track(const std::filesystem::path path) {
 // untracks entries with unique file sizes. Returns amount of files
 // that are no longer being tracked
 uintmax_t Broom::untrack_unique_sizes(std::vector<entry::Entry>& tracked_entries) {
-    // key: size, value: amount of occurences
+    // key: size, value: amount of occurrences
     std::map<uintmax_t, uintmax_t> sizes_map;
 
     for (auto entry_iter = tracked_entries.begin(); entry_iter != tracked_entries.end(); entry_iter++) {
         // check if size of this entry is already in the map
-        // if yes --> increment occurences counter
+        // if yes --> increment occurrences counter
         // if not --> add it to the map with a counter of 1
         auto iterator = sizes_map.find(entry_iter->filesize);
         if (iterator == sizes_map.end()) {
@@ -107,21 +107,21 @@ uintmax_t Broom::untrack_unique_sizes(std::vector<entry::Entry>& tracked_entries
 // untracks entries with the same content-pieces. Returns amount of
 // files that are no longer being tracked
 uintmax_t Broom::untrack_unique_contents(std::vector<entry::Entry>& tracked_entries) {
-    // contents, occurences
+    // contents, occurrences
     std::map<std::string, uintmax_t> contents_map;
     std::map<std::string, uintmax_t>::iterator map_iter;
 
     for (entry::Entry& entry : tracked_entries) {
         // the same logic:
         // check if contents of this entry are already in the map
-        // if yes --> increment occurences counter
+        // if yes --> increment occurrences counter
         // if not --> add it to the map with a counter of 1
         map_iter = contents_map.find(entry.pieces);
         if (map_iter == contents_map.end()) {
             // add it to the map
             contents_map.insert({entry.pieces, 1});
         } else {
-            // increment occurences counter
+            // increment occurrences counter
             contents_map[map_iter->first]++;
         }
 
@@ -161,9 +161,9 @@ void Broom::create_scan_results_list(const std::vector<entry::Entry> tracked_ent
     for (const entry::Entry entry : tracked_entries) {
         // log every entry and its group
         if (entry.group == group::EMPTY) {
-            outfile << entry.path << " --- is an empty file" << std::endl;
+            outfile << "[EMPTY] " << entry.path << std::endl;
         } else if (entry.group == group::DUPLICATE) {
-            outfile << entry.path << " --- is a duplicate of another file" << std::endl;
+            outfile << "[DUPLICATE] " <<  entry.path << std::endl;
         }
     }
 
@@ -205,6 +205,17 @@ uintmax_t Broom::remove_empty_files(std::vector<entry::Entry>& tracked_entries) 
     }), tracked_entries.end());
 
     return removed;
+};
+
+// marks every entry without any group as a duplicate
+void Broom::mark_as_duplicates(std::vector<entry::Entry>& tracked_entries) {
+    for (entry::Entry& entry : tracked_entries) {
+        if (entry.group == group::EMPTY) {
+            // do not mess up grouping
+            continue;
+        }
+        entry.group = group::DUPLICATE;
+    }
 };
 
 }

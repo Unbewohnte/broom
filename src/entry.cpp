@@ -82,7 +82,7 @@ void Entry::get_pieces() {
 
     // make a convenient hex string out of pure bytes
     std::stringstream pieces_hex;
-    for (uint8_t i = 0; i < PIECE_SIZE * 2; i++) {
+    for (uint8_t i = 0; i < PIECE_SIZE * 3; i++) {
         pieces_hex << std::hex << static_cast<unsigned>(pieces_buffer[i]);
     };
 

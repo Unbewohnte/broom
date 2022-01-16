@@ -64,6 +64,7 @@ void print_version() {
     << std::endl;
 };
 
+
 int main(int argc, char* argv[]) {
     bool benchmarking = false;
     bool sweeping = false;
@@ -165,26 +166,24 @@ int main(int argc, char* argv[]) {
             }
         }), tracked_entries.end());
 
+        
         // untrack unique contents
         untracked = broom.untrack_unique_contents(tracked_entries);
         std::cout << "[INFO] Untracked " << untracked << " files with unique contents" << std::endl;
 
         // mark entries as duplicates
-        for (entry::Entry& entry : tracked_entries) {
-            if (entry.group == group::EMPTY) {
-                // do not mess up grouping
-                continue;
-            }
-            entry.group = group::DUPLICATE;
-        }
+        broom.mark_as_duplicates(tracked_entries);
 
         std::cout << "[INFO] " << tracked_entries.size() << " files left being tracked" << std::endl;
 
-        // now only files with a non-unique size and contents are being tracked
-        // are they REALLY duplicates ?
-        // leave the REAL cleanup for the user, saving these entries in a file
-        broom.create_scan_results_list(tracked_entries);
-        std::cout << "[INFO] Created scan results file" << std::endl;
+        if (tracked_entries.size() > 0) {
+            // now only files with a non-unique size and contents are being tracked
+            // are they REALLY duplicates ?
+            // better to leave the REALL cleanup for the user, saving these entries in a file, than doing a blind and possibly destructive purge
+            broom.create_scan_results_list(tracked_entries);
+            std::cout << "[INFO] Created scan results file" << std::endl;
+        }
+
 
     } catch(const std::exception& e) {
         std::cerr

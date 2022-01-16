@@ -52,6 +52,9 @@ public:
 
     // creates a list of duplicate, empty files into a file
     void create_scan_results_list(const std::vector<entry::Entry> tracked_entries, const std::filesystem::path dir = ".", const std::string filename = "scan_results.txt");
+
+    // marks every entry without any group as a duplicate
+    void mark_as_duplicates(std::vector<entry::Entry>& tracked_entries);
 };
 
 }
