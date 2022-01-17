@@ -28,7 +28,7 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include "broom.hpp"
 
 // Broom version number
-#define VERSION "v0.1.2"
+#define VERSION "v0.2.0"
 
 void print_help() {
     std::cout
@@ -66,7 +66,6 @@ void print_version() {
 
 
 int main(int argc, char* argv[]) {
-    bool benchmarking = false;
     bool sweeping = false;
 
     std::filesystem::path tracked_path;
@@ -87,9 +86,6 @@ int main(int argc, char* argv[]) {
         else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
             print_version();
             return 0;
-        }
-        else if (strcmp(argv[i], "-b") == 0 || strcmp(argv[i], "--benchmark") == 0) {
-            benchmarking = true;
         }
         else if (strcmp(argv[i], "sweep") == 0) {
             sweeping = true;
