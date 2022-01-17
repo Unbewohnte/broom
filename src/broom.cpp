@@ -142,8 +142,8 @@ uintmax_t Broom::untrack_unique_contents(std::vector<entry::Entry>& tracked_entr
     return untracked;
 };
 
-// creates a list of duplicate, empty files into a file
-void Broom::create_scan_results_list(const std::vector<entry::Entry> tracked_entries, const std::filesystem::path dir, const std::string filename) {
+// creates a list of duplicate, empty files and puts it into a file
+void Broom::create_scan_results_list(const std::map<std::string, std::vector<entry::Entry>> grouped_duplicates, const std::filesystem::path dir, const std::string filename) {
     if (!std::filesystem::exists(dir)) {
         // create it then
         bool created = std::filesystem::create_directories(dir);
@@ -158,13 +158,21 @@ void Broom::create_scan_results_list(const std::vector<entry::Entry> tracked_ent
         throw "Could not create a scan results file";
     }
 
-    for (const entry::Entry entry : tracked_entries) {
-        // log every entry and its group
-        if (entry.group == group::EMPTY) {
-            outfile << "[EMPTY] " << entry.path << std::endl;
-        } else if (entry.group == group::DUPLICATE) {
-            outfile << "[DUPLICATE] " <<  entry.path << std::endl;
+    auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    outfile << ">> Broom scan results file from " << std::ctime(&now) << std::endl << std::endl << std::endl;
+
+    for (const auto record : grouped_duplicates) {
+        if (record.first == "") {
+            outfile << "[EMPTY FILES]" << std::endl;
+        } else {
+            outfile << "[DUPLICATE GROUP]" << std::endl;
         }
+
+        for (const auto duplicate_entry : record.second) {
+            outfile << duplicate_entry.path << std::endl;
+        }
+
+        outfile << std::endl << std::endl;
     }
 
     outfile.close();
@@ -216,6 +224,31 @@ void Broom::mark_as_duplicates(std::vector<entry::Entry>& tracked_entries) {
         }
         entry.group = group::DUPLICATE;
     }
+};
+
+
+// searches for entries with the same pieces in tracked entries and groups them together as a duplicate group, where the key is the
+// string of pieces. REMOVES EVERYTHING FROM GIVEN TRACKED ENTRIES
+std::map<std::string, std::vector<entry::Entry>> Broom::group_duplicates(std::vector<entry::Entry>& tracked_entries) {
+    std::map<std::string, std::vector<entry::Entry>> duplicate_groups;
+
+    for (auto iter = tracked_entries.begin(); iter != tracked_entries.end(); iter++) {
+      auto map_iter = duplicate_groups.find(iter->pieces);
+      if (map_iter == duplicate_groups.end()) {
+        // first time seeing these pieces
+        std::vector<entry::Entry> occurences;
+        occurences.push_back(*iter);
+        duplicate_groups.insert({iter->pieces, occurences});
+      } else {
+        // add to occurrences this entry
+        duplicate_groups[map_iter->first].push_back(*iter);
+      }
+    };
+
+    // clear the vector
+    tracked_entries.clear();
+
+    return duplicate_groups;
 };
 
 }

@@ -22,6 +22,7 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <cstdint>
 #include <vector>
+#include <map>
 
 namespace broom {
 
@@ -50,11 +51,15 @@ public:
     // REMOVES grouped empty files and untracks them after deletion. Returns the amount of removed empty files
     uintmax_t remove_empty_files(std::vector<entry::Entry>& tracked_entries);
 
-    // creates a list of duplicate, empty files into a file
-    void create_scan_results_list(const std::vector<entry::Entry> tracked_entries, const std::filesystem::path dir = ".", const std::string filename = "scan_results.txt");
-
     // marks every entry without any group as a duplicate
     void mark_as_duplicates(std::vector<entry::Entry>& tracked_entries);
+
+    // searches for entries with the same pieces in tracked entries and groups them together as a duplicate group, where the key is the
+    // string of pieces. REMOVES EVERYTHING FROM GIVEN TRACKED ENTRIES
+    std::map<std::string, std::vector<entry::Entry>> group_duplicates(std::vector<entry::Entry>& tracked_entries);
+
+    // creates a list of duplicate, empty files and puts it into a file
+    void create_scan_results_list(const std::map<std::string, std::vector<entry::Entry>> grouped_duplicates, const std::filesystem::path dir = ".", const std::string filename = "scan_results.txt");
 };
 
 }

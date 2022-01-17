@@ -38,7 +38,8 @@ Entry::Entry(const std::filesystem::path entry_path) {
 Entry::~Entry() {};
 
 // reads 3 pieces from the beginning, middle and the end of a file, converts them into
-// a convenient hex-encoded string
+// a convenient hex-encoded string. If a file has a size of less than PIECE_SIZE * PIECES_AMOUNT ->
+// constructs pieces from the whole file contents. If a file has no contents at all -> its pieces will be set to ""
 void Entry::get_pieces() {
     std::fstream entry_file;
     entry_file.open(path);
@@ -48,7 +49,11 @@ void Entry::get_pieces() {
     }
 
     char pieces_buffer[PIECE_SIZE * PIECES_AMOUNT];
-    if (filesize <= PIECE_SIZE * PIECES_AMOUNT) {
+    if (filesize == 0) {
+        // EMPTY file !
+        pieces = "";
+        return;
+    } else if (filesize <= PIECE_SIZE * PIECES_AMOUNT) {
         // can`t take whole 3 pieces !
         // read the whole file then
         entry_file.read(pieces_buffer, filesize);

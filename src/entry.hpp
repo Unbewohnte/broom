@@ -30,7 +30,7 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 
 namespace entry {
 // 3 pieces (beginning, middle and end of the file)
-const uint8_t PIECE_SIZE = 85;
+const uint8_t PIECE_SIZE = 75;
 const uint8_t PIECES_AMOUNT = 3;
 
 // A wrapper for every file in filesystem with all necessary information
@@ -45,7 +45,8 @@ public:
     ~Entry();
 
     // reads 3 pieces from the beginning, middle and the end of a file, converts them into
-    // a convenient hex-encoded string
+    // a convenient hex-encoded string. If a file has a size of less than PIECE_SIZE * PIECES_AMOUNT ->
+    // constructs pieces from the whole file contents. If a file has no contents at all -> its pieces will be set to ""
     void get_pieces();
 
     // REMOVE entry from the disk
