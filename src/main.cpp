@@ -28,7 +28,7 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include "broom.hpp"
 
 // Broom version number
-#define VERSION "v0.2.0"
+#define VERSION "v0.2.1"
 
 void print_help() {
     std::cout
@@ -39,7 +39,10 @@ void print_help() {
 
     << "[COMMANDS]" << std::endl
     << "sweep -> scan for duplicate files, save results in a file and REMOVE empty files" << std::endl
-    << "scan -> scan and save results in a file without touching any files [DEFAULT]" << std::endl
+    << "scan -> scan and save results in a file without removing anything [DEFAULT]" << std::endl << std::endl
+
+    << "[DIRECTORY]" << std::endl
+    << "path to the directory to be scanned" << std::endl
     << std::endl;
 };
 
@@ -108,16 +111,6 @@ int main(int argc, char* argv[]) {
 
     broom::Broom broom;
     try {
-        // auto t0 = std::chrono::high_resolution_clock::now();
-        /*
-        auto tracking_time = std::chrono::high_resolution_clock::now();
-
-        std::cout
-        << "[BENCHMARK] Tracking took "
-        << std::chrono::duration_cast<std::chrono::milliseconds>(tracking_time - t0).count()
-        << " ms" << std::endl;
-        */
-
         std::cout
         << "          _" << std::endl
         << "         //" << std::endl
