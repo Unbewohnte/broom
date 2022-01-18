@@ -34,8 +34,9 @@ void print_help() {
     std::cout
     << "broom [FLAGS..] [COMMAND] [DIRECTORY]" << std::endl << std::endl
     << "[FLAGS]" << std::endl
-    << "-v | --version -> print version information and exit" << std::endl
-    << "-h | --help -> print this message and exit" << std::endl << std::endl
+    << "-v  | --version -> print version information and exit" << std::endl
+    << "-h  | --help -> print this message and exit" << std::endl
+    << "-od | --output-directory -> path to the directory to save results file in" << std::endl << std::endl
 
     << "[COMMANDS]" << std::endl
     << "sweep -> scan for duplicate files, save results in a file and REMOVE empty files" << std::endl
@@ -70,7 +71,7 @@ void print_version() {
 
 int main(int argc, char* argv[]) {
     bool sweeping = false;
-
+    std::filesystem::path results_file_dir_path = ".";
     std::filesystem::path tracked_path;
 
     if (argc < 2) {
@@ -90,6 +91,10 @@ int main(int argc, char* argv[]) {
             print_version();
             return 0;
         }
+        else if (strcmp(argv[i], "-od") == 0 || strcmp(argv[i], "--output-directory") == 0) {
+            i++;
+            results_file_dir_path = std::filesystem::path(argv[i]);
+        }
         else if (strcmp(argv[i], "sweep") == 0) {
             sweeping = true;
         }
@@ -107,6 +112,8 @@ int main(int argc, char* argv[]) {
         print_help();
         return 1;
     };
+
+    std::cout << "given path: " << results_file_dir_path << std::endl;
 
 
     broom::Broom broom;
@@ -167,11 +174,14 @@ int main(int argc, char* argv[]) {
 
         auto grouped_duplicates = broom.group_duplicates(tracked_entries);
 
-        // now only files with a non-unique size and contents are being tracked
-        // are they REALLY duplicates ?
-        // better to leave the REALL cleanup for the user, saving these entries in a file, than doing a blind and possibly destructive purge
-        broom.create_scan_results_list(grouped_duplicates);
-        std::cout << "[INFO] Created scan results file" << std::endl;
+        if (grouped_duplicates.size() > 0) {
+            // now only files with a non-unique size and contents are being tracked
+            // are they REALLY duplicates ?
+            // better to leave the REALL cleanup for the user, saving these entries in a file, than doing a blind and possibly destructive purge
+            broom.create_scan_results_list(grouped_duplicates, results_file_dir_path);
+            std::cout << "[INFO] Created scan results file" << std::endl;
+        }
+
 
     } catch(const std::exception& e) {
         std::cerr
