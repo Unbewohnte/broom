@@ -189,7 +189,6 @@ int main(int argc, char* argv[]) {
         for (auto& record : grouped_duplicates) {
             could_be_freed += record.second[0].filesize * (record.second.size() - 1);
         }
-
         std::cout <<"[INFO] " << could_be_freed / 1024 / 1024 << " MB could be freed" << std::endl;
 
     } catch(const std::exception& e) {

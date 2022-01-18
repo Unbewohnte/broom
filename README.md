@@ -53,6 +53,7 @@ broom [FLAGS..] [COMMAND] [DIRECTORY]
 
 - `-v` or `--version` -> print version information and exit
 - `-h` or `--help` -> print this message and exit
+- `-od` or `--output-directory` -> path to the directory to save results file in
 
 [COMMANDS]
 
@@ -64,7 +65,7 @@ broom [FLAGS..] [COMMAND] [DIRECTORY]
 
 ### Examples
 
-- `broom scan ~/homework`
+- `broom scan -od . ~/homework`
 - `broom sweep ~/homework/I/have/a/lot/of/empty/files/here/for/some/reason`
 
 after the scan the results file will be saved in your current working directory, scan results file contains
