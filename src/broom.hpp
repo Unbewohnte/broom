@@ -23,6 +23,9 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include <cstdint>
 #include <vector>
 #include <map>
+#include <string>
+
+#include "entry.hpp"
 
 namespace broom {
 

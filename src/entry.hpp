@@ -24,6 +24,7 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <string>
 
 #include "group.hpp"
 

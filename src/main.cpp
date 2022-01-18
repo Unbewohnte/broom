@@ -28,7 +28,7 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include "broom.hpp"
 
 // Broom version number
-#define VERSION "v0.2.1"
+#define VERSION "v0.2.2"
 
 void print_help() {
     std::cout
@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
     };
 
     // process command line arguments
-    for (unsigned int i = 1; i < argc; i++) {
+    for (unsigned int i = 1; i < (unsigned int) argc; i++) {
         // flags -> command -> directory
 
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
@@ -170,7 +170,7 @@ int main(int argc, char* argv[]) {
         // now only files with a non-unique size and contents are being tracked
         // are they REALLY duplicates ?
         // better to leave the REALL cleanup for the user, saving these entries in a file, than doing a blind and possibly destructive purge
-        broom.create_scan_results_list(grouped_duplicates );
+        broom.create_scan_results_list(grouped_duplicates);
         std::cout << "[INFO] Created scan results file" << std::endl;
 
     } catch(const std::exception& e) {

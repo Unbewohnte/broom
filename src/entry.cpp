@@ -21,7 +21,7 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <iostream>
 #include <cerrno>
-#include <cstring>
+#include <string>
 
 
 namespace entry {
@@ -45,7 +45,7 @@ void Entry::get_pieces() {
     entry_file.open(path);
 
     if (!entry_file.is_open()) {
-        throw std::ifstream::failure("Could not open \"" + path.string() + "\"; reason: " + std::string(std::strerror(errno)) + "\n");
+        throw std::ifstream::failure("Could not open \"" + path.string() + "\"");
     }
 
     char pieces_buffer[PIECE_SIZE * PIECES_AMOUNT];

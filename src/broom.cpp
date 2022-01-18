@@ -24,6 +24,7 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include <chrono>
 #include <stdexcept>
 #include <future>
+#include <string>
 
 #include "entry.hpp"
 #include "broom.hpp"
@@ -161,14 +162,14 @@ void Broom::create_scan_results_list(const std::map<std::string, std::vector<ent
     auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     outfile << ">> Broom scan results file from " << std::ctime(&now) << std::endl << std::endl << std::endl;
 
-    for (const auto record : grouped_duplicates) {
+    for (const auto& record : grouped_duplicates) {
         if (record.first == "") {
             outfile << "[EMPTY FILES]" << std::endl;
         } else {
             outfile << "[DUPLICATE GROUP]" << std::endl;
         }
 
-        for (const auto duplicate_entry : record.second) {
+        for (const auto& duplicate_entry : record.second) {
             outfile << duplicate_entry.path << std::endl;
         }
 
