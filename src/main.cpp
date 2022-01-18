@@ -28,7 +28,7 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include "broom.hpp"
 
 // Broom version number
-#define VERSION "v0.2.2"
+#define VERSION "v0.2.3"
 
 void print_help() {
     std::cout
@@ -113,8 +113,6 @@ int main(int argc, char* argv[]) {
         return 1;
     };
 
-    std::cout << "given path: " << results_file_dir_path << std::endl;
-
 
     broom::Broom broom;
     try {
@@ -174,14 +172,25 @@ int main(int argc, char* argv[]) {
 
         auto grouped_duplicates = broom.group_duplicates(tracked_entries);
 
-        if (grouped_duplicates.size() > 0) {
-            // now only files with a non-unique size and contents are being tracked
-            // are they REALLY duplicates ?
-            // better to leave the REALL cleanup for the user, saving these entries in a file, than doing a blind and possibly destructive purge
-            broom.create_scan_results_list(grouped_duplicates, results_file_dir_path);
-            std::cout << "[INFO] Created scan results file" << std::endl;
+        if (grouped_duplicates.size() == 0) {
+            std::cout << "[INFO] Nothing I can help with ! Congratulations !" << std::endl;
+            return 0;
         }
 
+        // now only files with a non-unique size and contents are being tracked
+        // are they REALLY duplicates ?
+        // better to leave the REALL cleanup for the user, saving these entries in a file, than doing a blind and possibly destructive purge
+        broom.create_scan_results_list(grouped_duplicates, results_file_dir_path);
+        std::cout << "[INFO] Created scan results file" << std::endl;
+
+        // output a little information about how much space could be freed if every duplicate
+        // in the group will be deleted but one
+        double could_be_freed = 0;
+        for (auto& record : grouped_duplicates) {
+            could_be_freed += record.second[0].filesize * (record.second.size() - 1);
+        }
+
+        std::cout <<"[INFO] " << could_be_freed / 1024 / 1024 << " MB could be freed" << std::endl;
 
     } catch(const std::exception& e) {
         std::cerr
