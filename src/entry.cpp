@@ -95,7 +95,7 @@ void Entry::get_pieces() {
 };
 
 // Remove entry from the disk
-void Entry::remove() {
+void Entry::remove() const {
     std::filesystem::remove(path);
 };
 

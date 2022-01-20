@@ -22,5 +22,5 @@ endif()
 
 set(EXECUTABLE_OUTPUT_PATH ../bin)
 
-add_executable(broom ../src/main.cpp ../src/entry.cpp ../src/broom.cpp ../src/group.hpp)
+add_executable(broom ../src/main.cpp ../src/entry.cpp ../src/broom.cpp)
 target_link_libraries(broom Threads::Threads)

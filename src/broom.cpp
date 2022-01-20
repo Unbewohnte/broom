@@ -28,7 +28,6 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "entry.hpp"
 #include "broom.hpp"
-#include "group.hpp"
 
 namespace broom {
 
@@ -52,7 +51,7 @@ std::vector<entry::Entry> Broom::track(const std::filesystem::path path) {
         );
 
         for (auto dir_entry : std::filesystem::recursive_directory_iterator(path, options)) {
-            if (!dir_entry.is_regular_file()) {
+            if (!dir_entry.is_regular_file() || std::filesystem::is_symlink(dir_entry.path())) {
                 // skip everything that we cannot process so easily
                 continue;
             };
@@ -60,7 +59,7 @@ std::vector<entry::Entry> Broom::track(const std::filesystem::path path) {
             entry::Entry entry(dir_entry.path());
             tracked_entries.push_back(entry);
         }
-    } else if (std::filesystem::is_regular_file(path)) {
+    } else if (std::filesystem::is_regular_file(path) && !std::filesystem::is_symlink(path)) {
         // just a file
         entry::Entry entry(path);
         tracked_entries.push_back(entry);
@@ -186,7 +185,7 @@ uintmax_t Broom::find_empty_files(std::vector<entry::Entry>& tracked_entries) {
     for (entry::Entry& entry : tracked_entries) {
         if (entry.filesize == 0) {
             // empty files can`t be considered as duplicates. assign a group
-            entry.group = group::EMPTY;
+            entry.group = entry::EMPTY;
             found_empty_files++;
         }
     }
@@ -199,7 +198,7 @@ uintmax_t Broom::remove_empty_files(std::vector<entry::Entry>& tracked_entries) 
     uintmax_t removed = 0;
 
     tracked_entries.erase(std::remove_if(tracked_entries.begin(), tracked_entries.end(), [&removed](entry::Entry& entry) -> bool {
-        if (entry.group == group::EMPTY) {
+        if (entry.group == entry::EMPTY) {
             try {
                 entry.remove();
                 removed++;
@@ -219,11 +218,11 @@ uintmax_t Broom::remove_empty_files(std::vector<entry::Entry>& tracked_entries) 
 // marks every entry without any group as a duplicate
 void Broom::mark_as_duplicates(std::vector<entry::Entry>& tracked_entries) {
     for (entry::Entry& entry : tracked_entries) {
-        if (entry.group == group::EMPTY) {
+        if (entry.group == entry::EMPTY) {
             // do not mess up grouping
             continue;
         }
-        entry.group = group::DUPLICATE;
+        entry.group = entry::DUPLICATE;
     }
 };
 
@@ -250,6 +249,35 @@ std::map<std::string, std::vector<entry::Entry>> Broom::group_duplicates(std::ve
     tracked_entries.clear();
 
     return duplicate_groups;
+};
+
+// REMOVES every duplicate file in a group except the first one and creates symlinks pointing to the
+// first remaining real file
+void Broom::remove_duplicates_make_symlinks(const std::map<std::string, std::vector<entry::Entry>> grouped_duplicates) {
+    for (const auto& record : grouped_duplicates) {
+        unsigned int i = 0;
+        std::filesystem::path original_file_path;
+
+        for (const auto& duplicate_entry : record.second) {
+            if (i == 0) {
+                // the first duplicate in the group. Save it
+                original_file_path = duplicate_entry.path;
+            } else {
+                // not the first entry; REMOVE it and create a symlink,
+                // pointing to the real file
+                std::filesystem::path removed_duplicate_path = duplicate_entry.path;
+                try {
+                    // remove the entry
+                    duplicate_entry.remove();
+                    // make a symlink
+                    std::filesystem::create_symlink(original_file_path, removed_duplicate_path);
+                } catch(...) {}
+            }
+
+            // serves only the first iteration. It doesn`t matter if it is not incremented after that
+            i++;
+        }
+    }
 };
 
 }

@@ -61,6 +61,10 @@ public:
     // string of pieces. REMOVES EVERYTHING FROM GIVEN TRACKED ENTRIES
     std::map<std::string, std::vector<entry::Entry>> group_duplicates(std::vector<entry::Entry>& tracked_entries);
 
+    // REMOVES every duplicate file in a group except the first one and creates symlinks pointing to the
+    // first remaining real file
+    void remove_duplicates_make_symlinks(const std::map<std::string, std::vector<entry::Entry>> grouped_duplicates);
+
     // creates a list of duplicate, empty files and puts it into a file
     void create_scan_results_list(const std::map<std::string, std::vector<entry::Entry>> grouped_duplicates, const std::filesystem::path dir = ".", const std::string filename = "scan_results.txt");
 };

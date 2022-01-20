@@ -28,7 +28,7 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include "broom.hpp"
 
 // Broom version number
-#define VERSION "v0.2.3"
+#define VERSION "v0.3.0"
 
 void print_help() {
     std::cout
@@ -39,7 +39,7 @@ void print_help() {
     << "-od | --output-directory -> path to the directory to save results file in" << std::endl << std::endl
 
     << "[COMMANDS]" << std::endl
-    << "sweep -> scan for duplicate files, save results in a file and REMOVE empty files" << std::endl
+    << "sweep -> scan for duplicate files, REMOVE empty files and REPLACE other duplicates with symlinks" << std::endl
     << "scan -> scan and save results in a file without removing anything [DEFAULT]" << std::endl << std::endl
 
     << "[DIRECTORY]" << std::endl
@@ -170,26 +170,35 @@ int main(int argc, char* argv[]) {
 
         std::cout << "[INFO] " << tracked_entries.size() << " files left being tracked" << std::endl;
 
-        auto grouped_duplicates = broom.group_duplicates(tracked_entries);
-
-        if (grouped_duplicates.size() == 0) {
+        if (tracked_entries.size() == 0) {
+            // No duplicates at all !
             std::cout << "[INFO] Nothing I can help with ! Congratulations !" << std::endl;
             return 0;
         }
 
-        // now only files with a non-unique size and contents are being tracked
-        // are they REALLY duplicates ?
-        // better to leave the REALL cleanup for the user, saving these entries in a file, than doing a blind and possibly destructive purge
-        broom.create_scan_results_list(grouped_duplicates, results_file_dir_path);
-        std::cout << "[INFO] Created scan results file" << std::endl;
+        // make duplicate groups from all this mess that tracked_entries right now are
+        auto grouped_duplicates = broom.group_duplicates(tracked_entries);
 
-        // output a little information about how much space could be freed if every duplicate
-        // in the group will be deleted but one
         double could_be_freed = 0;
         for (auto& record : grouped_duplicates) {
             could_be_freed += record.second[0].filesize * (record.second.size() - 1);
         }
-        std::cout <<"[INFO] " << could_be_freed / 1024 / 1024 << " MB could be freed" << std::endl;
+
+        if (!sweeping) {
+            // output a little information about how much space could be freed if every duplicate
+            // in the group will be deleted but one
+            std::cout <<"[INFO] " << could_be_freed / 1024 / 1024 << " MB could be freed" << std::endl;
+
+            broom.create_scan_results_list(grouped_duplicates, results_file_dir_path);
+            std::cout << "[INFO] Created scan results file" << std::endl;
+
+        } else {
+            // remove duplicates and create symlinks
+            std::cout << "[INFO] Removing duplicates and creating symlinks..." << std::endl;
+            broom.remove_duplicates_make_symlinks(grouped_duplicates);
+
+            std::cout <<"[INFO] Freed approximately " << could_be_freed / 1024 / 1024 << " MB (May be incorrect)" << std::endl;
+        }
 
     } catch(const std::exception& e) {
         std::cerr

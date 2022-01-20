@@ -57,7 +57,7 @@ broom [FLAGS..] [COMMAND] [DIRECTORY]
 
 [COMMANDS]
 
-- `sweep` -> scan for duplicate files, save results in a file and REMOVE empty files
+- `sweep` -> scan for duplicate files, REMOVE empty files and REPLACE other duplicates with symlinks
 - `scan` -> scan and save results in a file without removing anything [DEFAULT]
 
 
@@ -66,9 +66,9 @@ broom [FLAGS..] [COMMAND] [DIRECTORY]
 ### Examples
 
 - `broom scan -od . ~/homework`
-- `broom sweep ~/homework/I/have/a/lot/of/empty/files/here/for/some/reason`
+- `broom sweep ~/homework`
 
-after the scan the results file will be saved in your current working directory, scan results file contains
+after the scan the results file will be saved in your current working directory, unless you specified it to be somewhere else. Scan results file contains
 a list of duplicate files that are grouped together so you can see EXACTLY WHERE each duplicate is in the filesystem.
 
 ---
@@ -80,4 +80,5 @@ GPLv3
 
 ## TODO
 - Make it go  `P` A `R` A `L` L `E` L
-- Output approximate size that could be freed
+- ~~Output approximate size that could be freed~~
+- ~~Remove duplicates and create symlinks~~

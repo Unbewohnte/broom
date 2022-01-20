@@ -26,10 +26,14 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include <iomanip>
 #include <string>
 
-#include "group.hpp"
-
 
 namespace entry {
+
+enum Group {
+    DUPLICATE,
+    EMPTY,
+};
+
 // 3 pieces (beginning, middle and end of the file)
 const uint8_t PIECE_SIZE = 75;
 const uint8_t PIECES_AMOUNT = 3;
@@ -40,7 +44,7 @@ public:
     std::filesystem::path path; // set via constructor
     uintmax_t filesize; // set via constructor
     std::string pieces; // 3 hex-represented pieces of file; set only via a method call to not stress the disk
-    group::Group group; // set externally
+    Group group; // set externally
 
     Entry(const std::filesystem::path entry_path);
     ~Entry();
@@ -51,7 +55,7 @@ public:
     void get_pieces();
 
     // REMOVE entry from the disk
-    void remove();
+    void remove() const;
 };
 
 }
