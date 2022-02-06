@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2021  Kasyanov Nikolay Alexeevich (Unbewohnte (me@unbewohnte.xyz))
+Copyright (C) 2021  Kasyanov Nikolay Alexeyevich (Unbewohnte (me@unbewohnte.xyz))
 
 This file is part of broom.
 
@@ -61,7 +61,7 @@ void print_version() {
     << "  //////   " << std::endl
     << " ///////   " << std::endl << std::endl
 
-    << "Copyright (C) 2021  Kasyanov Nikolay Alexeevich (Unbewohnte (me@unbewohnte.xyz))" << std::endl
+    << "Copyright (C) 2021  Kasyanov Nikolay Alexeyevich (Unbewohnte (me@unbewohnte.xyz))" << std::endl
     << "This program comes with ABSOLUTELY NO WARRANTY." << std::endl
     << "This is free software, and you are welcome to redistribute it" << std::endl
     << "under certain conditions" << std::endl
