@@ -215,6 +215,22 @@ uintmax_t Broom::remove_empty_files(std::vector<entry::Entry>& tracked_entries) 
     return removed;
 };
 
+// Untracks specified group in tracked entries. Returns an amount of entries untracked 
+uintmax_t Broom::untrack_group(std::vector<entry::Entry>& tracked_entries, entry::Group group) {
+    uintmax_t untracked = 0;
+
+    tracked_entries.erase(std::remove_if(tracked_entries.begin(), tracked_entries.end(), [&untracked, &group](entry::Entry& entry) -> bool {
+        if (entry.group == group) {
+            untracked++;
+            return true;
+        } else {
+            return false;
+        }
+    }), tracked_entries.end());
+
+    return untracked;
+}
+
 // marks every entry without any group as a duplicate
 void Broom::mark_as_duplicates(std::vector<entry::Entry>& tracked_entries) {
     for (entry::Entry& entry : tracked_entries) {

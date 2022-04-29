@@ -28,51 +28,51 @@ along with broom.  If not, see <https://www.gnu.org/licenses/>.
 #include "broom.hpp"
 
 // Broom version number
-#define VERSION "v0.3.0"
+#define VERSION "v0.3.1"
 
 void print_help() {
     std::cout
-    << "broom [FLAGS..] [COMMAND] [DIRECTORY]" << std::endl << std::endl
-    << "[FLAGS]" << std::endl
-    << "-v  | --version -> print version information and exit" << std::endl
-    << "-h  | --help -> print this message and exit" << std::endl
-    << "-od | --output-directory -> path to the directory to save results file in" << std::endl << std::endl
+    << "broom [FLAGS..] [COMMAND] [DIRECTORY]\n\n"
+    << "[FLAGS]\n"
+    << "-v  | --version -> print version information and exit\n"
+    << "-h  | --help -> print this message and exit\n"
+    << "-ie | --ignore-empty -> do not remove empty files when sweeping"
+    << "-od | --output-directory -> path to the directory to save results file in when scanning\n\n"
 
-    << "[COMMANDS]" << std::endl
-    << "sweep -> scan for duplicate files, REMOVE empty files and REPLACE other duplicates with symlinks" << std::endl
-    << "scan -> scan and save results in a file without removing anything [DEFAULT]" << std::endl << std::endl
+    << "[COMMANDS]\n"
+    << "sweep -> scan for duplicate files, REMOVE empty files and REPLACE other duplicates with symlinks\n"
+    << "scan -> scan and save results in a file without removing anything [DEFAULT]\n\n"
 
-    << "[DIRECTORY]" << std::endl
-    << "path to the directory to be scanned" << std::endl
-    << std::endl;
+    << "[DIRECTORY]\n"
+    << "path to the directory to be scanned\n\n";
 };
 
 void print_version() {
     std::cout
-    << "broom " << VERSION << std::endl
-    << "incurable hoarder`s helpful friend" << std::endl << std::endl
+    << "broom " << VERSION << "\n"
+    << "incurable hoarder`s helpful friend\n\n"
 
-    << "          _" << std::endl
-    << "         //" << std::endl
-    << "        // " << std::endl
-    << "       //  " << std::endl
-    << "      //   " << std::endl
-    << "   /####/  " << std::endl
-    << "  //////   " << std::endl
-    << " ///////   " << std::endl << std::endl
+    << "          _\n" 
+    << "         //\n" 
+    << "        // \n" 
+    << "       //  \n" 
+    << "      //   \n" 
+    << "   /####/  \n" 
+    << "  //////   \n" 
+    << " ///////   \n\n"
 
-    << "Copyright (C) 2021  Kasyanov Nikolay Alexeyevich (Unbewohnte (me@unbewohnte.xyz))" << std::endl
-    << "This program comes with ABSOLUTELY NO WARRANTY." << std::endl
-    << "This is free software, and you are welcome to redistribute it" << std::endl
-    << "under certain conditions" << std::endl
-    << std::endl;
+    << "Copyright (C) 2021  Kasyanov Nikolay Alexeyevich (Unbewohnte (me@unbewohnte.xyz))\n"
+    << "This program comes with ABSOLUTELY NO WARRANTY.\n"
+    << "This is free software, and you are welcome to redistribute it\n"
+    << "under certain conditions\n";
 };
 
 
 int main(int argc, char* argv[]) {
-    bool sweeping = false;
     std::filesystem::path results_file_dir_path = ".";
     std::filesystem::path tracked_path;
+    bool sweeping = false;
+    bool ignore_empty = false;
 
     if (argc < 2) {
         print_help();
@@ -94,6 +94,9 @@ int main(int argc, char* argv[]) {
         else if (strcmp(argv[i], "-od") == 0 || strcmp(argv[i], "--output-directory") == 0) {
             i++;
             results_file_dir_path = std::filesystem::path(argv[i]);
+        }
+        else if (strcmp(argv[i], "-ie") == 0 || strcmp(argv[i], "--ignore-empty") == 0) {
+            ignore_empty = true;
         }
         else if (strcmp(argv[i], "sweep") == 0) {
             sweeping = true;
@@ -117,37 +120,41 @@ int main(int argc, char* argv[]) {
     broom::Broom broom;
     try {
         std::cout
-        << "          _" << std::endl
-        << "         //" << std::endl
-        << "        // " << std::endl
-        << "       //  " << std::endl
-        << "      //   " << std::endl
-        << "   /####/  " << std::endl
-        << "  //////   " << std::endl
-        << " ///////   " << std::endl << std::endl;
+        << "          _\n"
+        << "         //\n"
+        << "        // \n"
+        << "       //  \n"
+        << "      //   \n"
+        << "   /####/  \n"
+        << "  //////   \n"
+        << " ///////   \n\n";
         if (sweeping) {
-            std::cout << "[Sweeping]" << std::endl << std::endl;
+            std::cout << "[Sweeping]\n\n";
         } else {
-            std::cout << "[Scanning]" << std::endl << std::endl;
+            std::cout << "[Scanning]\n\n";
         }
 
         // track files in a given directory
         std::vector<entry::Entry> tracked_entries = broom.track(tracked_path);
-        std::cout << "[INFO] Tracking " << tracked_entries.size() << " files" << std::endl;
+        std::cout << "[INFO] Tracking " << tracked_entries.size() << " files\n";
 
         // find empty files
         uintmax_t empty_files = broom.find_empty_files(tracked_entries);
-        std::cout << "[INFO] Found " << empty_files << " empty files" << std::endl;
+        std::cout << "[INFO] Found " << empty_files << " empty files\n";
 
         // if sweeping - remove empty files right away
-        if (sweeping) {
+        if (sweeping && !ignore_empty) {
             uintmax_t removed = broom.remove_empty_files(tracked_entries);
-            std::cout << "[INFO] Removed " << removed << " empty files" << std::endl;
+            std::cout << "[INFO] Removed " << removed << " empty files\n";
+        } else {
+            // just untrack them, do not remove
+            uintmax_t untracked_empty = broom.untrack_group(tracked_entries, entry::Group::EMPTY);
+            std::cout << "[INFO] Skipped " << untracked_empty << " empty files\n";
         }
 
         // untrack unique sizes
         uintmax_t untracked = broom.untrack_unique_sizes(tracked_entries);
-        std::cout << "[INFO] Untracked " << untracked << " files with a unique size" << std::endl;
+        std::cout << "[INFO] Untracked " << untracked << " files with a unique size\n";
 
         // get content pieces for each entry
         tracked_entries.erase(std::remove_if(tracked_entries.begin(), tracked_entries.end(), [](entry::Entry& entry) -> bool {
@@ -163,16 +170,16 @@ int main(int argc, char* argv[]) {
 
         // untrack unique contents
         untracked = broom.untrack_unique_contents(tracked_entries);
-        std::cout << "[INFO] Untracked " << untracked << " files with unique contents" << std::endl;
+        std::cout << "[INFO] Untracked " << untracked << " files with unique contents\n";
 
         // mark entries as duplicates
         broom.mark_as_duplicates(tracked_entries);
 
-        std::cout << "[INFO] " << tracked_entries.size() << " files left being tracked" << std::endl;
+        std::cout << "[INFO] " << tracked_entries.size() << " files left being tracked\n";
 
         if (tracked_entries.size() == 0) {
             // No duplicates at all !
-            std::cout << "[INFO] Nothing I can help with ! Congratulations !" << std::endl;
+            std::cout << "[INFO] Nothing I can help with ! Congratulations !\n";
             return 0;
         }
 
@@ -187,22 +194,21 @@ int main(int argc, char* argv[]) {
         if (!sweeping) {
             // output a little information about how much space could be freed if every duplicate
             // in the group will be deleted but one
-            std::cout <<"[INFO] " << could_be_freed / 1024 / 1024 << " MB could be freed" << std::endl;
+            std::cout <<"[INFO] " << could_be_freed / 1024 / 1024 << " MB could be freed\n";
 
             broom.create_scan_results_list(grouped_duplicates, results_file_dir_path);
-            std::cout << "[INFO] Created scan results file" << std::endl;
+            std::cout << "[INFO] Created scan results file\n";
 
         } else {
             // remove duplicates and create symlinks
-            std::cout << "[INFO] Removing duplicates and creating symlinks..." << std::endl;
+            std::cout << "[INFO] Removing duplicates and creating symlinks...\n";
             broom.remove_duplicates_make_symlinks(grouped_duplicates);
-
-            std::cout <<"[INFO] Freed approximately " << could_be_freed / 1024 / 1024 << " MB (May be incorrect)" << std::endl;
+            std::cout <<"[INFO] Freed approximately " << could_be_freed / 1024 / 1024 << " MB (May be incorrect)\n";
         }
 
     } catch(const std::exception& e) {
         std::cerr
-        << "[ERROR] " << e.what() << std::endl;
+        << "[ERROR] " << e.what() <<"\n";
         return 1;
     };
 

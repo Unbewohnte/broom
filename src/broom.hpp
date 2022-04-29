@@ -46,6 +46,9 @@ public:
     // untracks entries with the same content-pieces. Returns amount of
     // files that are no longer being tracked.
     uintmax_t untrack_unique_contents(std::vector<entry::Entry>& tracked_entries);
+    
+    // Untracks specified group in tracked entries. Returns an amount of entries untracked 
+    uintmax_t untrack_group(std::vector<entry::Entry>& tracked_entries, entry::Group group);
 
     // finds empty files among tracked entries and marks them with the appropriate group.
     // Returns amount of found empty files
