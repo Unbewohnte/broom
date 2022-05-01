@@ -36,7 +36,7 @@ void print_help() {
     << "[FLAGS]\n"
     << "-v  | --version -> print version information and exit\n"
     << "-h  | --help -> print this message and exit\n"
-    << "-ie | --ignore-empty -> do not remove empty files when sweeping"
+    << "-ie | --ignore-empty -> do not remove empty files when sweeping\n"
     << "-od | --output-directory -> path to the directory to save results file in when scanning\n\n"
 
     << "[COMMANDS]\n"
